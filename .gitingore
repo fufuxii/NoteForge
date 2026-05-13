@@ -1,0 +1,58 @@
+# Entornos virtuales + Python
+venv/
+.venv/
+env/
+bin/
+lib/
+include/
+build/
+dist/
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# Node / React
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# Build
+/build
+/dist
+/out
+.next/
+*.so
+
+# Variables de entorno
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Credenciales de Google Cloud 
+*.json
+!package.json
+!tsconfig.json
+!manifest.json
+!firebase.json
+service-account.json
+google-credentials.json
+firebase-key.json
+
+# Logs y temp 
+*.log
+logs/
+*.bak
+*.tmp
+
+# Otros 
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
