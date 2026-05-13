@@ -1,0 +1,65 @@
+import { auth } from "./firebase";
+
+const BASE = "/api";
+
+async function authHeader() {
+  const user = auth.currentUser;
+  if (!user) return {};
+  const token = await user.getIdToken();
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function listApuntes() {
+  const res = await fetch(`${BASE}/apuntes`, { headers: { ...(await authHeader()) } });
+  if (!res.ok) throw new Error(`listApuntes ${res.status}`);
+  return res.json();
+}
+
+export async function getApunte(id) {
+  const res = await fetch(`${BASE}/apuntes/${id}`, { headers: { ...(await authHeader()) } });
+  if (!res.ok) throw new Error(`getApunte ${res.status}`);
+  return res.json();
+}
+
+export async function searchApuntes(q) {
+  const res = await fetch(`${BASE}/apuntes/search?q=${encodeURIComponent(q)}`, {
+    headers: { ...(await authHeader()) },
+  });
+  if (!res.ok) throw new Error(`search ${res.status}`);
+  return res.json();
+}
+
+export async function forjar({ images = [], audios = [], texts = [], asignaturaId = null }) {
+  const fd = new FormData();
+  images.forEach((img) => fd.append("images", img));
+  audios.forEach((a) => fd.append("audios", a));
+  texts.forEach((t) => fd.append("texts", t));
+  if (asignaturaId) fd.append("asignaturaId", asignaturaId);
+
+  const res = await fetch(`${BASE}/forja`, {
+    method: "POST",
+    headers: { ...(await authHeader()) },
+    body: fd,
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`forjar ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+export async function fetchTTS(id, lang = "es") {
+  const res = await fetch(`${BASE}/apuntes/${id}/tts?lang=${lang}`, {
+    headers: { ...(await authHeader()) },
+  });
+  if (!res.ok) throw new Error(`tts ${res.status}`);
+  return res.blob();
+}
+
+export async function translateApunte(id, lang) {
+  const res = await fetch(`${BASE}/apuntes/${id}/translate?lang=${lang}`, {
+    headers: { ...(await authHeader()) },
+  });
+  if (!res.ok) throw new Error(`translate ${res.status}`);
+  return res.json();
+}
