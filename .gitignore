@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+venv/
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Env y secrets
+.env
+.env.local
+*.json
+!package.json
+!package-lock.json
+!firebase.json
+!tsconfig.json
+!frontend/src/**/*.json
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
