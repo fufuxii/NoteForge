@@ -12,10 +12,8 @@ def forge(uid: str, asignatura_id, images, audios, texts) -> str:
         sources_text.append({"kind": "imagen-ocr", "text": ocr_text})
 
     for aud in audios:
-        audio_bytes = aud.read()
-        aud.stream.seek(0)
         meta = storage_service.upload_file(uid, aud, kind="audios")
-        transcript = speech_service.transcribe_bytes(audio_bytes, aud.mimetype or "audio/webm")
+        transcript = speech_service.transcribe_uri(meta["gcsUri"], meta["contentType"])
         sources_meta.append({"type": "audio", "path": meta["path"], "transcript": transcript})
         sources_text.append({"kind": "audio-transcripcion", "text": transcript})
 

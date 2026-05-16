@@ -8,7 +8,7 @@ def _get_client():
         _client = speech.SpeechClient()
     return _client
 
-def transcribe_bytes(audio_bytes: bytes, mime_type: str, language: str = "es-ES") -> str:
+def _build_config(mime_type: str, language: str) -> speech.RecognitionConfig:
     if "webm" in mime_type or "opus" in mime_type:
         encoding = speech.RecognitionConfig.AudioEncoding.WEBM_OPUS
         sample_rate = 48000
@@ -32,8 +32,29 @@ def transcribe_bytes(audio_bytes: bytes, mime_type: str, language: str = "es-ES"
     if sample_rate:
         config_kwargs["sample_rate_hertz"] = sample_rate
 
-    config = speech.RecognitionConfig(**config_kwargs)
-    audio = speech.RecognitionAudio(content=audio_bytes)
+    return speech.RecognitionConfig(**config_kwargs)
 
+
+def transcribe_uri(gcs_uri: str, mime_type: str, language: str = "es-ES") -> str:
+    config = _build_config(mime_type, language)
+    audio = speech.RecognitionAudio(uri=gcs_uri)
+
+    operation = _get_client().long_running_recognize(config=config, audio=audio)
+    response = operation.result(timeout=2100)
+
+    return " ".join(
+        r.alternatives[0].transcript
+        for r in response.results
+        if r.alternatives
+    )
+
+
+def transcribe_bytes(audio_bytes: bytes, mime_type: str, language: str = "es-ES") -> str:
+    config = _build_config(mime_type, language)
+    audio = speech.RecognitionAudio(content=audio_bytes)
     response = _get_client().recognize(config=config, audio=audio)
-    return " ".join(r.alternatives[0].transcript for r in response.results if r.alternatives)
+    return " ".join(
+        r.alternatives[0].transcript
+        for r in response.results
+        if r.alternatives
+    )
