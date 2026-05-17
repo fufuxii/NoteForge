@@ -186,9 +186,6 @@ export default function DetalleApunte() {
               <audio ref={audioRef} src={audioUrl} controls className="w-full" />
             )}
 
-            <p className="text-xs text-neutral-400 mt-3">
-              Google Cloud Text-to-Speech (Neural2)
-            </p>
           </div>
         </div>
       </aside>
