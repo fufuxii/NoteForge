@@ -73,7 +73,7 @@ export default function NuevoApunte() {
     <div className="max-w-3xl mx-auto px-10 py-10">
       <h1 className="text-3xl font-bold mb-2">Nuevo apunte</h1>
       <p className="text-neutral-500 mb-8">
-        Sube imágenes, audios, notas o lo que quieras. Gemini lo fundirá todo en un apunte coherente.
+        Sube imágenes, audios, notas ...
       </p>
 
       <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-6 mb-4">
@@ -141,12 +141,12 @@ export default function NuevoApunte() {
       <div className="border border-neutral-200 rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <FileText className="w-4 h-4 text-neutral-500" />
-          <span className="font-medium text-sm">Notas adicionales (opcional)</span>
+          <span className="font-medium text-sm">Notas adicionales</span>
         </div>
         <textarea
           value={textNote}
           onChange={(e) => setTextNote(e.target.value)}
-          placeholder="Cualquier contexto extra, página del libro, frases que dijo el profesor…"
+          placeholder="Cualquier nota extra, página del libro, frases que dijo el profesor…"
           className="w-full text-sm bg-transparent outline-none resize-none min-h-20"
         />
       </div>
@@ -161,9 +161,6 @@ export default function NuevoApunte() {
       >
         <Sparkles className="w-4 h-4" /> Forjar apunte
       </button>
-      <p className="text-xs text-neutral-400 text-center mt-2">
-        ~10-20s · Gemini 2.5 Flash + Cloud Vision + Speech-to-Text
-      </p>
     </div>
   );
 }

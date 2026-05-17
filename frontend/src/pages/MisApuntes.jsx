@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { listApuntes } from "../lib/api";
 
 function relativeTime(date) {
@@ -31,12 +31,6 @@ export default function MisApuntes() {
           <h1 className="text-lg font-semibold">Mis apuntes</h1>
           <span className="text-sm text-neutral-400">· {items.length} documentos</span>
         </div>
-        <Link
-          to="/nuevo"
-          className="flex items-center gap-2 bg-forge-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4" /> Nuevo
-        </Link>
       </div>
 
       {loading ? (

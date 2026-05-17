@@ -50,7 +50,7 @@ export default function Home() {
 
         {recientes.length === 0 ? (
           <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-12 text-center text-neutral-400">
-            Aún no has forjado ningún apunte. Pulsa “Forjar apunte” arriba para empezar.
+            Aún no has forjado ningún apunte. Pulsa “Forjar apunte” para empezar.
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-4">
