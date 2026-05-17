@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import MisApuntes from "./pages/MisApuntes";
 import NuevoApunte from "./pages/NuevoApunte";
 import DetalleApunte from "./pages/DetalleApunte";
+import BibliotecaAudio from "./pages/BibliotecaAudio";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/apuntes" element={<MisApuntes />} />
             <Route path="/apuntes/:id" element={<DetalleApunte />} />
             <Route path="/nuevo" element={<NuevoApunte />} />
+            <Route path="/audios" element={<BibliotecaAudio />} />
           </Route>
         </Routes>
       </BrowserRouter>

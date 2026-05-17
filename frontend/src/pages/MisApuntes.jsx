@@ -29,7 +29,6 @@ export default function MisApuntes() {
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-neutral-400" />
           <h1 className="text-lg font-semibold">Mis apuntes</h1>
-          <span className="text-sm text-neutral-400">· {items.length} documentos</span>
         </div>
       </div>
 

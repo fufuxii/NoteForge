@@ -3,10 +3,10 @@ import { Home, FileText, Plus, AudioLines, Languages, Trash2, LogOut, Search } f
 import { useAuth } from "../auth/AuthContext";
 
 const navItems = [
-  { to: "/", label: "Inicio", icon: Home, end: true }, // <--- Cambiado de Sparkles a Home
-  { to: "/apuntes", label: "Mis apuntes", icon: FileText },
+  { to: "/", label: "Inicio", icon: Home, end: true },
   { to: "/nuevo", label: "Nuevo apunte", icon: Plus },
-  { to: "/audios", label: "Biblioteca audio", icon: AudioLines, disabled: true },
+  { to: "/apuntes", label: "Mis apuntes", icon: FileText },
+  { to: "/audios", label: "Mis audios", icon: AudioLines },
   { to: "/traducciones", label: "Traducciones", icon: Languages, disabled: true },
   { to: "/papelera", label: "Papelera", icon: Trash2, disabled: true },
 ];
