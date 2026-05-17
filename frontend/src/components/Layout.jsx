@@ -1,9 +1,9 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Sparkles, FileText, Plus, AudioLines, Languages, Trash2, LogOut, Search } from "lucide-react";
+import { Home, FileText, Plus, AudioLines, Languages, Trash2, LogOut, Search } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
 const navItems = [
-  { to: "/", label: "Inicio", icon: Sparkles, end: true },
+  { to: "/", label: "Inicio", icon: Home, end: true }, // <--- Cambiado de Sparkles a Home
   { to: "/apuntes", label: "Mis apuntes", icon: FileText },
   { to: "/nuevo", label: "Nuevo apunte", icon: Plus },
   { to: "/audios", label: "Biblioteca audio", icon: AudioLines, disabled: true },
@@ -19,9 +19,7 @@ export default function Layout() {
     <div className="min-h-screen flex bg-white">
       <aside className="w-64 border-r border-neutral-200 flex flex-col">
         <div className="px-5 py-5 flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-forge-blue flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+          <img src="/logo.png" alt="NoteForge" className="h-8 w-auto" />
           <span className="font-bold text-lg">NoteForge</span>
         </div>
 
