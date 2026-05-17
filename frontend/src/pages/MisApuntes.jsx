@@ -55,9 +55,6 @@ export default function MisApuntes() {
                 {a.tags?.[0] || "Apunte"}
               </div>
               <h3 className="font-semibold leading-tight">{a.title}</h3>
-              <div className="mt-auto text-xs text-neutral-400 pt-4">
-                {(a.sources?.length || 0)} {a.sources?.length === 1 ? "fuente" : "fuentes"} · {relativeTime(a.createdAt)}
-              </div>
             </Link>
           ))}
         </div>
