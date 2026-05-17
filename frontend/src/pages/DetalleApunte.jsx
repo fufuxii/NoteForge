@@ -74,6 +74,7 @@ export default function DetalleApunte() {
 
   const structure = displayApunte.structure || {};
   const isTranslated = activeLang !== (original.language || "es");
+  const hasCachedAudio = !!(displayApunte?.ttsPaths?.[activeLang]);
 
   return (
     <div className="max-w-5xl mx-auto px-10 py-10 grid grid-cols-3 gap-8">
@@ -172,7 +173,8 @@ export default function DetalleApunte() {
               >
                 {generatingTTS ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Generando…
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {hasCachedAudio ? "Cargando audio…" : "Generando audio…"}
                   </>
                 ) : (
                   <>

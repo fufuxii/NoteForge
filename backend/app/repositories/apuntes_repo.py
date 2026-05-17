@@ -77,3 +77,6 @@ def search_by_title(uid: str, prefix: str, limit: int = 10) -> list[dict]:
            .end_at([end])
            .limit(limit))
     return [{**s.to_dict(), "id": s.id} for s in q.stream()]
+
+def save_tts_path(nid: str, lang: str, path: str) -> None:
+    update(nid, {f"ttsPaths.{lang}": path})

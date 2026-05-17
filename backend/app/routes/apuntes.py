@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, g, request, Response
 from app.auth.firebase_auth import require_auth
 from app.repositories import apuntes_repo
-from app.services import tts_service, translation_service
+from app.services import tts_service, translation_service, storage_service
 
 apuntes_bp = Blueprint("apuntes", __name__)
 
@@ -39,6 +39,11 @@ def tts(nid):
     if lang not in ("es", "ca", "en"):
         lang = "es"
 
+    tts_paths = item.get("ttsPaths") or {}
+    if lang in tts_paths:
+        audio_bytes = storage_service.download_bytes(tts_paths[lang])
+        return Response(audio_bytes, mimetype="audio/mpeg")
+
     if lang != (item.get("language") or "es"):
         item = translation_service.translate_apunte(item, lang)
 
@@ -47,6 +52,16 @@ def tts(nid):
         return jsonify({"error": "empty_content"}), 400
 
     audio_bytes = tts_service.synthesize(text, lang=lang)
+
+    meta = storage_service.upload_bytes(
+        uid=item["ownerUid"],
+        data=audio_bytes,
+        kind="tts",
+        ext="mp3",
+        content_type="audio/mpeg",
+    )
+    apuntes_repo.save_tts_path(nid, lang, meta["path"])
+
     return Response(audio_bytes, mimetype="audio/mpeg")
 
 @apuntes_bp.get("/<nid>/translate")

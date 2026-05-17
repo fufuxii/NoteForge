@@ -36,3 +36,15 @@ def signed_url(path: str, minutes: int = 60) -> str:
 def download_bytes(path: str) -> bytes:
     bucket = _get_client().bucket(current_app.config["BUCKET"])
     return bucket.blob(path).download_as_bytes()
+
+def upload_bytes(uid: str, data: bytes, kind: str, ext: str, content_type: str) -> dict:
+    bucket_name = current_app.config["BUCKET"]
+    bucket = _get_client().bucket(bucket_name)
+    blob_name = f"users/{uid}/{kind}/{uuid.uuid4().hex}.{ext}"
+    blob = bucket.blob(blob_name)
+    blob.upload_from_string(data, content_type=content_type)
+    return {
+        "path": blob_name,
+        "gcsUri": f"gs://{bucket_name}/{blob_name}",
+        "contentType": content_type,
+    }
