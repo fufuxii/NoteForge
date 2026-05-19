@@ -1,20 +1,34 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
-import { getProfile, updateProfile } from "../lib/api";
-import { User } from "lucide-react";
+import { getProfile, updateProfile, getUniversidades, getEstudios } from "../lib/api";
 
 export default function Perfil() {
   const { user } = useAuth();
   const [form, setForm] = useState({ universidad: "", estudios: "" });
+  const [universidades, setUniversidades] = useState([]);
+  const [estudiosOpciones, setEstudiosOpciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    getProfile()
-      .then((p) => setForm({ universidad: p.universidad || "", estudios: p.estudios || "" }))
+    Promise.all([getProfile(), listUniversidades()])
+      .then(([p, unis]) => {
+        setUniversidades(unis);
+        setForm({ universidad: p.universidad || "", estudios: p.estudios || "" });
+        if (p.universidad) {
+          const uni = unis.find((u) => u.nombre === p.universidad);
+          if (uni) setEstudiosOpciones(uni.estudios || []);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleUniversidad = (nombre) => {
+    setForm({ universidad: nombre, estudios: "" });
+    const uni = universidades.find((u) => u.nombre === nombre);
+    setEstudiosOpciones(uni?.estudios || []);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -40,22 +54,33 @@ export default function Perfil() {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-neutral-700 block mb-1">Universidad</label>
-            <input
+            <select
               value={form.universidad}
-              onChange={(e) => setForm({ ...form, universidad: e.target.value })}
-              placeholder="Ej: Universitat Autònoma de Barcelona"
-              className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-forge-blue"
-            />
+              onChange={(e) => handleUniversidad(e.target.value)}
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-forge-blue bg-white"
+            >
+              <option value="">Selecciona tu universidad</option>
+              {universidades.map((u) => (
+                <option key={u.id} value={u.nombre}>{u.nombre}</option>
+              ))}
+            </select>
           </div>
+
           <div>
             <label className="text-sm font-medium text-neutral-700 block mb-1">Estudios</label>
-            <input
+            <select
               value={form.estudios}
               onChange={(e) => setForm({ ...form, estudios: e.target.value })}
-              placeholder="Ej: Ingeniería Informática - Sistemas Multimedia"
-              className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-forge-blue"
-            />
+              disabled={!form.universidad}
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-forge-blue bg-white disabled:opacity-50"
+            >
+              <option value="">Selecciona tus estudios</option>
+              {estudiosOpciones.map((e) => (
+                <option key={e} value={e}>{e}</option>
+              ))}
+            </select>
           </div>
+
           <button
             onClick={handleSave}
             disabled={saving}

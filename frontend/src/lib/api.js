@@ -97,3 +97,15 @@ export async function updateProfile(data) {
   if (!res.ok) throw new Error(`updateProfile ${res.status}`);
   return res.json();
 }
+
+export async function getUniversidades() {
+  const res = await fetch(`${BASE}/universidades`);
+  if (!res.ok) throw new Error(`getUniversidades ${res.status}`);
+  return res.json();
+}
+
+export async function getEstudios(uniId) {
+  const res = await fetch(`${BASE}/universidades/${uniId}/estudios`);
+  if (!res.ok) throw new Error(`getEstudios ${res.status}`);
+  return res.json();
+}

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 COLLECTION = "users"
 
 def get(uid: str) -> dict | None:
-    db = get_db
+    db = get_db()
     snap = db.collection(COLLECTION).document(uid).get()
     if not snap.exists:
         return None
