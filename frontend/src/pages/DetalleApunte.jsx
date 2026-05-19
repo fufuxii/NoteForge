@@ -198,7 +198,7 @@ function Block({ block }) {
   if (block.type === "bullet_list") {
     return (
       <ul className="list-disc pl-6 space-y-1">
-        {block.items?.map((it, i) => <li key={i}>{it}</li>)}
+        {block.items?.map((it, i) => <li key={i}>{typeof it === "string" ? it : JSON.stringify(it)}</li>)}
       </ul>
     );
   }
