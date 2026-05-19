@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FileText, BookOpen } from "lucide-react";
+import { FileText, BookOpen, Trash2, Globe, Lock } from "lucide-react";
 import { listApuntes, deleteApunte, setVisibility } from "../lib/api";
 
 function relativeTime(date) {
@@ -22,6 +22,19 @@ export default function MisApuntes() {
       .then((r) => setItems(r.items || []))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (e, id) => {
+  e.preventDefault(); 
+  if (!confirm("¿Eliminar estos apuntes? Esta acción no se puede deshacer.")) return;
+  await deleteApunte(id);
+  setItems((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleVisibility = async (e, item) => {
+    e.preventDefault();
+    const updated = await setVisibility(item.id, !item.isPublic);
+    setItems((prev) => prev.map((a) => a.id === item.id ? { ...a, isPublic: updated.isPublic } : a));
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-10 py-10">
