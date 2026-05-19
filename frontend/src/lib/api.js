@@ -63,3 +63,21 @@ export async function translateApunte(id, lang) {
   if (!res.ok) throw new Error(`translate ${res.status}`);
   return res.json();
 }
+
+export async function deleteApunte(id) {
+  const res = await fetch(`${BASE}/apuntes/${id}`, {
+    method: "DELETE",
+    headers: { ...(await authHeader()) },
+  });
+  if (!res.ok) throw new Error(`deleteApunte ${res.status}`);
+}
+
+export async function setVisibility(id, isPublic) {
+  const res = await fetch(`${BASE}/apuntes/${id}/visibility`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...(await authHeader()) },
+    body: JSON.stringify({ isPublic }),
+  });
+  if (!res.ok) throw new Error(`setVisibility ${res.status}`);
+  return res.json();
+}

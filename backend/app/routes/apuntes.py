@@ -77,3 +77,23 @@ def translate_endpoint(nid):
 
     translated = translation_service.translate_apunte(item, target)
     return jsonify(translated)
+
+@apuntes_bp.delete("/<nid>")
+@require_auth
+def delete_apunte(nid):
+    item = apuntes_repo.get(nid)
+    if not item or item["ownerUid"] != g.user["uid"]:
+        return jsonify({"error": "not_found"}), 404
+    apuntes_repo.delete(nid)
+    return "", 204
+
+@apuntes_bp.patch("/<nid>/visibility")
+@require_auth
+def share_apunte(nid):
+    item = apuntes_repo.get(nid)
+    if not item or item["ownerUid"] != g.user["uid"]:
+        return jsonify({"error": "not_found"}), 404
+    body = request.get_json(silent=True) or {}
+    is_public = bool(body.get("isPublic", False))
+    apuntes_repo.set_public(nid, is_public)
+    return jsonify({"id": nid, "isPublic": is_public})

@@ -80,3 +80,10 @@ def search_by_title(uid: str, prefix: str, limit: int = 10) -> list[dict]:
 
 def save_tts_path(nid: str, lang: str, path: str) -> None:
     update(nid, {f"ttsPaths.{lang}": path})
+
+def delete(nid: str) -> None:
+    db = get_db()
+    db.collection(COLLECTION).document(nid).delete()
+
+def set_public(nid: str, public: bool) -> None:
+    update(nid, {"isPublic": public})

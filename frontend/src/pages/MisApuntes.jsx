@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileText, BookOpen } from "lucide-react";
-import { listApuntes } from "../lib/api";
+import { listApuntes, deleteApunte, setVisibility } from "../lib/api";
 
 function relativeTime(date) {
   if (!date) return "";
@@ -49,9 +49,21 @@ export default function MisApuntes() {
               to={`/apuntes/${a.id}`}
               className="border border-neutral-200 rounded-2xl p-5 hover:border-forge-blue transition flex flex-col min-h-44"
             >
-              <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-forge-blue" />
-                {a.tags?.[0] || "Apunte"}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-forge-blue" />
+                  {a.tags?.[0] || "Apunte"}
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={(e) => handleVisibility(e, a)} title={a.isPublic ? "Hacer privado" : "Publicar"}
+                    className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-forge-blue transition">
+                    {a.isPublic ? <Globe className="w-3.5 h-3.5 text-forge-blue" /> : <Lock className="w-3.5 h-3.5" />}
+                  </button>
+                  <button onClick={(e) => handleDelete(e, a.id)} title="Eliminar"
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-neutral-400 hover:text-red-500 transition">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
               <h3 className="font-semibold leading-tight flex-1">{a.title}</h3>
               <div className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium bg-neutral-100 text-neutral-800 border border-neutral-200">
