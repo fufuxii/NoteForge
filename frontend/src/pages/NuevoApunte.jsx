@@ -1,32 +1,47 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Sparkles, Image as ImageIcon, FileText, X, Loader2, AudioLines } from "lucide-react";
-import { forjar } from "../lib/api";
-import AudioRecorder from "../components/AudioRecorder";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
+import Sources from '../components/new-note/Sources';
+import ConfigPanel from '../components/new-note/ConfigPanel';
+import ConsejoIA from '../components/new-note/ConsejoIA';
+import ForgeProgress from '../components/forge/ForgeProgress';
+import Button from '../components/ui/Button';
+import { forjar } from '../lib/api';
 
 export default function NuevoApunte() {
   const navigate = useNavigate();
+  const [title, setTitle] = useState('');
+  const [subject, setSubject] = useState(null);
+  const [language, setLanguage] = useState('es');
+  const [postForja, setPostForja] = useState({ tts: true, translate: false, formulas: true });
+
   const [images, setImages] = useState([]);
   const [audioFiles, setAudioFiles] = useState([]);
   const [recordedAudio, setRecordedAudio] = useState(null);
-  const [textNote, setTextNote] = useState("");
+  const [text, setText] = useState('');
+
   const [forging, setForging] = useState(false);
   const [error, setError] = useState(null);
 
-  const addImages = (files) => setImages((prev) => [...prev, ...Array.from(files)]);
-  const addAudios = (files) => setAudioFiles((prev) => [...prev, ...Array.from(files)]);
+  const counts = {
+    images: images.length,
+    audios: audioFiles.length + (recordedAudio ? 1 : 0),
+    texts:  text.trim() ? 1 : 0,
+  };
+  const totalSources = counts.images + counts.audios + counts.texts;
+  const canSubmit = totalSources > 0 && !forging;
+
+  const addImages = (files) => setImages((prev) => [...prev, ...files]);
   const removeImage = (i) => setImages((prev) => prev.filter((_, idx) => idx !== i));
+  const addAudios = (files) => setAudioFiles((prev) => [...prev, ...files]);
   const removeAudio = (i) => setAudioFiles((prev) => prev.filter((_, idx) => idx !== i));
 
   const submit = async () => {
+    if (!canSubmit) return;
     const allAudios = [...audioFiles];
     if (recordedAudio) {
-      const f = new File([recordedAudio], `grabacion-${Date.now()}.webm`, { type: "audio/webm" });
+      const f = new File([recordedAudio], `grabacion-${Date.now()}.webm`, { type: 'audio/webm' });
       allAudios.push(f);
-    }
-    if (images.length === 0 && allAudios.length === 0 && !textNote.trim()) {
-      setError("Sube al menos una imagen, un audio o escribe alguna nota.");
-      return;
     }
     setError(null);
     setForging(true);
@@ -34,148 +49,66 @@ export default function NuevoApunte() {
       const { id } = await forjar({
         images,
         audios: allAudios,
-        texts: textNote.trim() ? [textNote.trim()] : [],
+        texts: text.trim() ? [text.trim()] : [],
+        asignaturaId: subject,
       });
       navigate(`/apuntes/${id}`);
     } catch (e) {
-      setError(e.message || "Error al forjar.");
+      setError(e.message || 'Error al forjar.');
       setForging(false);
     }
   };
 
-  const totalSources =
-    images.length + audioFiles.length + (recordedAudio ? 1 : 0) + (textNote.trim() ? 1 : 0);
+  return (
+    <>
+      <div className="max-w-6xl mx-auto px-8 py-10 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        <div>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Título del apunte…"
+            className="w-full text-4xl font-bold tracking-tight bg-transparent focus:outline-none placeholder:text-neutral-300 mb-3"
+          />
+          <p className="text-sm text-neutral-500 mb-8">Borrador · el título lo refinará Gemini si lo dejas vacío</p>
 
-  if (forging) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-2xl bg-forge-blue mx-auto flex items-center justify-center mb-6">
-            <Sparkles className="w-8 h-8 text-white animate-pulse" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Forjando tu apunte…</h2>
-          <p className="text-neutral-500 mb-8">
-            Fusionando {totalSources} {totalSources === 1 ? "fuente" : "fuentes"} en un solo documento.
+          <Sources
+            images={images} addImages={addImages} removeImage={removeImage}
+            audioFiles={audioFiles} addAudios={addAudios} removeAudio={removeAudio}
+            recordedAudio={recordedAudio} setRecordedAudio={setRecordedAudio}
+            text={text} setText={setText}
+          />
+
+          <ConsejoIA counts={counts} />
+
+          {error && (
+            <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>
+          )}
+        </div>
+
+        <aside className="space-y-3">
+          <ConfigPanel
+            subject={subject} setSubject={setSubject}
+            language={language} setLanguage={setLanguage}
+            postForja={postForja} setPostForja={setPostForja}
+          />
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full"
+            onClick={submit}
+            disabled={!canSubmit}
+            leadingIcon={<Sparkles className="h-4 w-4" />}
+          >
+            Forjar apunte
+          </Button>
+          <p className="text-xs text-center text-neutral-400">
+            {totalSources === 0 ? 'Añade al menos una fuente' : `${totalSources} fuente${totalSources === 1 ? '' : 's'} · Gemini + Cloud Vision`}
           </p>
-          <div className="space-y-3 text-left">
-            {images.length > 0 && <Step done label={`Cloud Vision · OCR de ${images.length} imagen(es)`} />}
-            {(audioFiles.length > 0 || recordedAudio) && <Step done label="Speech-to-Text · transcribiendo audio" />}
-            <Step current label="Gemini · fusionando fuentes" detail="identificando estructura jerárquica…" />
-            <Step pending label="Generando resumen y tags" />
-          </div>
-          <p className="text-xs text-neutral-400 mt-8">ETA · ~10-20s restantes</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-3xl mx-auto px-10 py-10">
-      <h1 className="text-3xl font-bold mb-2">Nuevo apunte</h1>
-      <p className="text-neutral-500 mb-8">
-        Sube imágenes, audios, notas ...
-      </p>
-
-      <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-6 mb-4">
-        <label className="cursor-pointer">
-          <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => addImages(e.target.files)} />
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-forge-blue-soft flex items-center justify-center">
-              <ImageIcon className="w-5 h-5 text-forge-blue" />
-            </div>
-            <div>
-              <p className="font-medium">Subir imágenes</p>
-              <p className="text-sm text-neutral-500">PNG, JPG · apuntes manuscritos, pizarras, libros…</p>
-            </div>
-          </div>
-        </label>
-        {images.length > 0 && (
-          <div className="grid grid-cols-4 gap-2 mt-4">
-            {images.map((f, i) => (
-              <div key={i} className="relative border rounded-lg overflow-hidden bg-neutral-50">
-                <img src={URL.createObjectURL(f)} alt="" className="w-full h-24 object-cover" />
-                <button onClick={() => removeImage(i)} className="absolute top-1 right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center hover:bg-white">
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        </aside>
       </div>
 
-      <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-6 mb-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-forge-blue-soft flex items-center justify-center">
-            <AudioLines className="w-5 h-5 text-forge-blue" />
-          </div>
-          <div>
-            <p className="font-medium">Audio</p>
-            <p className="text-sm text-neutral-500">Graba en directo o sube un archivo</p>
-          </div>
-        </div>
-
-        <AudioRecorder onChange={setRecordedAudio} />
-
-        <label className="cursor-pointer block mt-3">
-          <input type="file" multiple accept="audio/*" className="hidden" onChange={(e) => addAudios(e.target.files)} />
-          <div className="text-sm text-neutral-500 hover:text-forge-blue text-center py-2 border-t border-neutral-100">
-            o subir archivo de audio (.mp3, .m4a, .wav)
-          </div>
-        </label>
-
-        {audioFiles.length > 0 && (
-          <div className="space-y-2 mt-3">
-            {audioFiles.map((f, i) => (
-              <div key={i} className="flex items-center gap-2 p-2 bg-neutral-50 rounded-lg text-sm">
-                <AudioLines className="w-4 h-4 text-neutral-500" />
-                <span className="flex-1 truncate">{f.name}</span>
-                <button onClick={() => removeAudio(i)} className="p-1 hover:bg-neutral-200 rounded">
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="border border-neutral-200 rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <FileText className="w-4 h-4 text-neutral-500" />
-          <span className="font-medium text-sm">Notas adicionales</span>
-        </div>
-        <textarea
-          value={textNote}
-          onChange={(e) => setTextNote(e.target.value)}
-          placeholder="Cualquier nota extra, página del libro, frases que dijo el profesor…"
-          className="w-full text-sm bg-transparent outline-none resize-none min-h-20"
-        />
-      </div>
-
-      {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mb-4">{error}</div>
-      )}
-
-      <button
-        onClick={submit}
-        className="w-full flex items-center justify-center gap-2 bg-forge-blue text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition"
-      >
-        <Sparkles className="w-4 h-4" /> Forjar apunte
-      </button>
-    </div>
-  );
-}
-
-function Step({ done, current, pending, label, detail }) {
-  const bg = done ? "bg-forge-blue text-white" : current ? "bg-forge-blue-soft text-forge-blue border-2 border-forge-blue" : "bg-neutral-100 text-neutral-400";
-  return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg ${current ? "bg-forge-blue-soft" : ""}`}>
-      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${bg}`}>
-        {done ? "✓" : current ? <Loader2 className="w-3 h-3 animate-spin" /> : "·"}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm ${pending ? "text-neutral-400" : "font-medium"}`}>{label}</p>
-        {detail && <p className="text-xs text-neutral-500 font-mono">{detail}</p>}
-      </div>
-    </div>
+      {forging && <ForgeProgress counts={counts} />}
+    </>
   );
 }
