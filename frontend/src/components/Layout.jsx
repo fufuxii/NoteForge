@@ -53,7 +53,7 @@ export default function Layout() {
           ))}
         </nav>
 
-        <div className="border-t border-neutral-200 p-3 flex items-center gap-3">
+        <Link to="/perfil" className="border-t border-neutral-200 p-3 flex items-center gap-3 hover:bg-neutral-50 transition">
           <div className="w-9 h-9 rounded-full bg-neutral-200 flex items-center justify-center font-semibold text-sm">
             {(user?.displayName || user?.email || "?")[0].toUpperCase()}
           </div>
@@ -62,13 +62,13 @@ export default function Layout() {
             <p className="text-xs text-neutral-500">Plan Universitario</p>
           </div>
           <button
-            onClick={() => logout().then(() => navigate("/login"))}
+            onClick={(e) => { e.preventDefault(); logout().then(() => navigate("/login")); }}
             className="p-2 hover:bg-neutral-100 rounded-lg"
             title="Cerrar sesión"
           >
             <LogOut className="w-4 h-4 text-neutral-500" />
           </button>
-        </div>
+        </Link>
       </aside>
 
       <main className="flex-1 overflow-y-auto">

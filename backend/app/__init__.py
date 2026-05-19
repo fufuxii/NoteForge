@@ -21,9 +21,11 @@ def create_app():
     from app.routes.health import health_bp
     from app.routes.forja import forja_bp
     from app.routes.apuntes import apuntes_bp
+    from app.routes.users import users_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(forja_bp, url_prefix="/forja")
     app.register_blueprint(apuntes_bp, url_prefix="/apuntes")
+    app.register_blueprint(users_bp, url_prefix="/users")
 
     return app

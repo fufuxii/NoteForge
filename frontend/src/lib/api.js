@@ -81,3 +81,19 @@ export async function setVisibility(id, isPublic) {
   if (!res.ok) throw new Error(`setVisibility ${res.status}`);
   return res.json();
 }
+
+export async function getProfile() {
+  const res = await fetch(`${BASE}/users/profile`, { headers: { ...(await authHeader()) } });
+  if (!res.ok) throw new Error(`getProfile ${res.status}`);
+  return res.json();
+}
+
+export async function updateProfile(data) {
+  const res = await fetch(`${BASE}/users/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...(await authHeader()) },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`updateProfile ${res.status}`);
+  return res.json();
+}
