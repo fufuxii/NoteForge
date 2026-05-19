@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './layout/Sidebar';
 import TopBar from './layout/TopBar';
 import CommandPalette from './cmdk/CommandPalette';
+import SkipLink from './a11y/SkipLink';
 import { listApuntes } from '../lib/api';
 import { detectSubject } from '../lib/subjects';
 import { useHotkey } from '../hooks/useHotkey';
@@ -24,8 +25,10 @@ export default function Layout() {
   useEffect(() => {
     listApuntes().then((r) => {
       const items = r.items ?? [];
-      const ready = items.filter((a) => a.status === 'ready');
-      setCounts({ '/apuntes': items.length, '/audios': ready.length });
+      setCounts({
+        '/apuntes': items.length,
+        '/audios':  items.filter((a) => a.status === 'ready').length,
+      });
       const bySubject = {};
       for (const a of items) {
         const s = detectSubject(a);
@@ -37,10 +40,11 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex bg-surface-soft">
+      <SkipLink />
       <Sidebar counts={counts} subjectCounts={subjectCounts} onOpenCmdK={() => setCmdkOpen(true)} />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar />
-        <main className="flex-1 overflow-y-auto">
+        <main id="main" role="main" tabIndex={-1} className="flex-1 overflow-y-auto focus:outline-none">
           <Outlet />
         </main>
       </div>
