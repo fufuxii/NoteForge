@@ -199,15 +199,13 @@ function Block({ block }) {
     return (
       <ul className="list-disc pl-6 space-y-1">
         {block.items?.map((it, i) => (
-          <li key={i}>
-            {typeof it === "string" ? it : it.type === "bullet_list" ? (
-              <ul className="list-disc pl-4 space-y-1 mt-1">
-                {it.items?.map((sub, j) => (
-                  <li key={j}>{typeof sub === "string" ? sub : sub.text || JSON.stringify(sub)}</li>
-                ))}
-              </ul>
-            ) : it.text || JSON.stringify(it)}
-          </li>
+          typeof it === "string" ? (
+            <li key={i}>{it}</li>
+          ) : it.type === "bullet_list" ? (
+            <Block key={i} block={it} />
+          ) : (
+            <li key={i}>{it.text || JSON.stringify(it)}</li>
+          )
         ))}
       </ul>
     );
