@@ -1,18 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
   --color-forge-blue: #2563eb;
+  --color-forge-blue-hover: #1d4ed8;
   --color-forge-blue-soft: #eff6ff;
+  --color-forge-blue-border: #bfdbfe;
+
+  --color-surface: #ffffff;
+  --color-surface-soft: #fafafa;
+  --color-surface-muted: #f5f5f5;
+
+  --color-border: #e5e5e5;
+  --color-border-strong: #d4d4d4;
+
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.02);
+  --shadow-popover: 0 12px 32px -8px rgb(0 0 0 / 0.12), 0 4px 8px -4px rgb(0 0 0 / 0.08);
 }
 
-html, body, #root {
-  height: 100%;
-}
+html, body, #root { height: 100%; }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: #fafafa;
+  background: var(--color-surface-soft);
   color: #111;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
