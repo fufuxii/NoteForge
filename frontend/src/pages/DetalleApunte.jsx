@@ -198,7 +198,17 @@ function Block({ block }) {
   if (block.type === "bullet_list") {
     return (
       <ul className="list-disc pl-6 space-y-1">
-        {block.items?.map((it, i) => <li key={i}>{typeof it === "string" ? it : JSON.stringify(it)}</li>)}
+        {block.items?.map((it, i) => (
+          <li key={i}>
+            {typeof it === "string" ? it : it.type === "bullet_list" ? (
+              <ul className="list-disc pl-4 space-y-1 mt-1">
+                {it.items?.map((sub, j) => (
+                  <li key={j}>{typeof sub === "string" ? sub : sub.text || JSON.stringify(sub)}</li>
+                ))}
+              </ul>
+            ) : it.text || JSON.stringify(it)}
+          </li>
+        ))}
       </ul>
     );
   }
