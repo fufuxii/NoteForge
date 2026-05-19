@@ -12,7 +12,7 @@ export default function Perfil() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    Promise.all([getProfile(), listUniversidades()])
+    Promise.all([getProfile(), getUniversidades()])
       .then(([p, unis]) => {
         setUniversidades(unis);
         setForm({ universidad: p.universidad || "", estudios: p.estudios || "" });
