@@ -9,6 +9,7 @@ import DetalleApunte from "./pages/DetalleApunte";
 import BibliotecaAudio from "./pages/MisAudios";
 import DetalleAudio from "./pages/DetalleAudio";
 import Perfil from "./pages/Perfil";
+import Universidades from "./pages/Universidades";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/audios" element={<BibliotecaAudio />} />
             <Route path="/audios/:id" element={<DetalleAudio />} />
             <Route path="/perfil" element={<Perfil />} />
+            <Route path="/universidades" element={<Universidades />} />
           </Route>
         </Routes>
       </BrowserRouter>

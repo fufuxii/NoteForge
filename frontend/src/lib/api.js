@@ -72,11 +72,11 @@ export async function deleteApunte(id) {
   if (!res.ok) throw new Error(`deleteApunte ${res.status}`);
 }
 
-export async function setVisibility(id, isPublic) {
+export async function setVisibility(id, isPublic, asignatura = null) {
   const res = await fetch(`${BASE}/apuntes/${id}/visibility`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify({ isPublic }),
+    body: JSON.stringify({ isPublic, ...(asignatura ? { asignatura } : {}) }),
   });
   if (!res.ok) throw new Error(`setVisibility ${res.status}`);
   return res.json();
@@ -109,3 +109,16 @@ export async function getEstudios(uniId) {
   if (!res.ok) throw new Error(`getEstudios ${res.status}`);
   return res.json();
 }
+
+export async function getAllUniversidades() {
+  const res = await fetch(`${BASE}/universidades`);
+  if (!res.ok) throw new Error(`getAllUniversidades ${res.status}`);
+  return res.json();
+}
+
+export async function getApuntesPublicos(asignatura) {
+  const res = await fetch(`${BASE}/universidades/apuntes-publicos?asignatura=${encodeURIComponent(asignatura)}`);
+  if (!res.ok) throw new Error(`getApuntesPublicos ${res.status}`);
+  return res.json();
+}
+

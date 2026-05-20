@@ -85,5 +85,21 @@ def delete(nid: str) -> None:
     db = get_db()
     db.collection(COLLECTION).document(nid).delete()
 
-def set_public(nid: str, public: bool) -> None:
-    update(nid, {"isPublic": public})
+def set_public(nid: str, public: bool, asignatura: str = None) -> None:
+    patch = {"isPublic": public}
+    if asignatura is not None:
+        patch["asignatura"] = asignatura
+    update(nid, patch)
+
+def list_public_by_asignatura(asignatura: str) -> list[dict]:
+    db = get_db()
+    q = (db.collection(COLLECTION)
+           .where(filter=firestore.FieldFilter("isPublic", "==", True))
+           .where(filter=firestore.FieldFilter("asignatura", "==", asignatura))
+           .limit(50))
+    out = []
+    for snap in q.stream():
+        d = snap.to_dict()
+        d["id"] = snap.id
+        out.append(d)
+    return out

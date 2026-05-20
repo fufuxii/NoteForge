@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileText, BookOpen, Trash2, Globe, Lock } from "lucide-react";
 import { listApuntes, deleteApunte, setVisibility } from "../lib/api";
+import PublicarApunteModal from "../components/PublicarApunteModal";
+
+
 
 function relativeTime(date) {
   if (!date) return "";
@@ -16,6 +19,7 @@ function relativeTime(date) {
 export default function MisApuntes() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalItem, setModalItem] = useState(null);
 
   useEffect(() => {
     listApuntes()
@@ -31,10 +35,20 @@ export default function MisApuntes() {
   };
 
   const handleVisibility = async (e, item) => {
-    e.preventDefault();
-    const updated = await setVisibility(item.id, !item.isPublic);
+  e.preventDefault();
+  if (!item.isPublic) {
+    setModalItem(item); 
+  } else {
+    const updated = await setVisibility(item.id, false);
     setItems((prev) => prev.map((a) => a.id === item.id ? { ...a, isPublic: updated.isPublic } : a));
-  };
+  }
+};
+
+const handleConfirmPublicar = async (asignatura) => {
+  const updated = await setVisibility(modalItem.id, true, asignatura);
+  setItems((prev) => prev.map((a) => a.id === modalItem.id ? { ...a, isPublic: updated.isPublic, asignatura: updated.asignatura } : a));
+  setModalItem(null);
+};
 
   return (
     <div className="max-w-6xl mx-auto px-10 py-10">
@@ -85,6 +99,12 @@ export default function MisApuntes() {
             </Link>
           ))}
         </div>
+      )}
+      {modalItem && (
+        <PublicarApunteModal
+          onConfirm={handleConfirmPublicar}
+          onClose={() => setModalItem(null)}
+        />
       )}
     </div>
   );

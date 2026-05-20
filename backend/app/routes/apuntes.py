@@ -95,5 +95,6 @@ def share_apunte(nid):
         return jsonify({"error": "not_found"}), 404
     body = request.get_json(silent=True) or {}
     is_public = bool(body.get("isPublic", False))
-    apuntes_repo.set_public(nid, is_public)
-    return jsonify({"id": nid, "isPublic": is_public})
+    asignatura = body.get("asignatura", None)
+    apuntes_repo.set_public(nid, is_public, asignatura)
+    return jsonify({"id": nid, "isPublic": is_public, "asignatura": asignatura})

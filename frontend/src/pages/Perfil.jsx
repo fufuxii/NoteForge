@@ -76,7 +76,7 @@ export default function Perfil() {
             >
               <option value="">Selecciona tus estudios</option>
               {estudiosOpciones.map((e) => (
-                <option key={e} value={e}>{e}</option>
+                <option key={e.nombre} value={e.nombre}>{e.nombre}</option>
               ))}
             </select>
           </div>

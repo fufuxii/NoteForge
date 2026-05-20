@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, Sparkles, FileText, Volume2, Loader2, Play, Languages } from "lucide-react";
-import { getApunte, fetchTTS, translateApunte } from "../lib/api";
+import { ChevronLeft, Sparkles, FileText, Volume2, Loader2, Play, Languages, Globe, Lock } from "lucide-react";
+import { getApunte, fetchTTS, translateApunte, setVisibility } from "../lib/api";
+import PublicarApunteModal from "../components/PublicarApunteModal";
 
 const LANGS = [
   { code: "es", label: "ES", name: "Castellano" },
@@ -21,24 +22,26 @@ export default function DetalleApunte() {
   const [generatingTTS, setGeneratingTTS] = useState(false);
   const audioRef = useRef(null);
 
+  const [isPublic, setIsPublic] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
   useEffect(() => {
     getApunte(id).then((a) => {
       setOriginal(a);
       setDisplayApunte(a);
       setActiveLang(a.language || "es");
+      setIsPublic(a.isPublic || false);
     }).finally(() => setLoading(false));
   }, [id]);
 
   const switchLang = async (lang) => {
     if (lang === activeLang) return;
-
     if (lang === (original.language || "es")) {
       setDisplayApunte(original);
       setActiveLang(lang);
       setAudioUrl(null);
       return;
     }
-
     setTranslating(true);
     try {
       const translated = await translateApunte(id, lang);
@@ -67,6 +70,17 @@ export default function DetalleApunte() {
     } finally {
       setGeneratingTTS(false);
     }
+  };
+
+  const handleConfirmPublicar = async (asignatura) => {
+    await setVisibility(id, true, asignatura);
+    setIsPublic(true);
+    setShowModal(false);
+  };
+
+  const handlePrivar = async () => {
+    await setVisibility(id, false);
+    setIsPublic(false);
   };
 
   if (loading) return <div className="text-center py-20 text-neutral-400">Cargando…</div>;
@@ -126,6 +140,8 @@ export default function DetalleApunte() {
 
       <aside className="col-span-1 space-y-4">
         <div className="border border-neutral-200 rounded-2xl p-5 sticky top-10 space-y-5">
+
+          {/* Idioma */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Languages className="w-4 h-4 text-forge-blue" />
@@ -154,6 +170,7 @@ export default function DetalleApunte() {
             )}
           </div>
 
+          {/* Audio */}
           <div className="border-t pt-5">
             <div className="flex items-center gap-2 mb-1">
               <Volume2 className="w-4 h-4 text-forge-blue" />
@@ -164,7 +181,6 @@ export default function DetalleApunte() {
             <p className="text-sm text-neutral-700 mb-3">
               Voz · {LANGS.find((l) => l.code === activeLang)?.name} · TTS
             </p>
-
             {!audioUrl ? (
               <button
                 onClick={handleListen}
@@ -185,10 +201,42 @@ export default function DetalleApunte() {
             ) : (
               <audio ref={audioRef} src={audioUrl} controls className="w-full" />
             )}
-
           </div>
+
+          {/* Visibilidad */}
+          <div className="border-t pt-5">
+            <div className="flex items-center gap-2 mb-3">
+              {isPublic ? <Globe className="w-4 h-4 text-forge-blue" /> : <Lock className="w-4 h-4 text-neutral-400" />}
+              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                Visibilidad
+              </span>
+            </div>
+            {isPublic ? (
+              <button
+                onClick={handlePrivar}
+                className="w-full flex items-center justify-center gap-2 border border-neutral-200 text-neutral-700 py-2.5 rounded-lg hover:bg-neutral-50 transition text-sm"
+              >
+                <Lock className="w-4 h-4" /> Hacer privado
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowModal(true)}
+                className="w-full flex items-center justify-center gap-2 bg-forge-blue text-white py-2.5 rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                <Globe className="w-4 h-4" /> Publicar
+              </button>
+            )}
+          </div>
+
         </div>
       </aside>
+
+      {showModal && (
+        <PublicarApunteModal
+          onConfirm={handleConfirmPublicar}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 }
