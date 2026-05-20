@@ -122,3 +122,9 @@ export async function getApuntesPublicos(asignatura) {
   return res.json();
 }
 
+export async function getApunteStatus(id) {
+  const res = await fetch(`${BASE}/apuntes/${id}`, { headers: { ...(await authHeader()) } });
+  if (!res.ok) throw new Error(`getApunteStatus ${res.status}`);
+  return res.json();
+}
+

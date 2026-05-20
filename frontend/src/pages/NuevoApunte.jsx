@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Image as ImageIcon, FileText, X, Loader2, AudioLines } from "lucide-react";
-import { forjar } from "../lib/api";
+import { forjar, getApunteStatus } from "../lib/api";
 import AudioRecorder from "../components/AudioRecorder";
 
 export default function NuevoApunte() {
@@ -30,51 +30,48 @@ export default function NuevoApunte() {
     }
     setError(null);
     setForging(true);
+
     try {
       const { id } = await forjar({
         images,
         audios: allAudios,
         texts: textNote.trim() ? [textNote.trim()] : [],
       });
-      navigate(`/apuntes/${id}`);
+
+      setImages([]);
+      setAudioFiles([]);
+      setRecordedAudio(null);
+      setTextNote("");
+
+      const poll = setInterval(async () => {
+        try {
+          const apunte = await getApunteStatus(id);
+          if (apunte.status === "ready") {
+            clearInterval(poll);
+            setForging(false);
+            navigate(`/apuntes/${id}`);
+          } else if (apunte.status === "error") {
+            clearInterval(poll);
+            setForging(false);
+            setError("Error al forjar el apunte.");
+          }
+        } catch {
+          clearInterval(poll);
+          setForging(false);
+          setError("Error comprobando el estado.");
+        }
+      }, 2000);
+
     } catch (e) {
       setError(e.message || "Error al forjar.");
       setForging(false);
     }
   };
 
-  const totalSources =
-    images.length + audioFiles.length + (recordedAudio ? 1 : 0) + (textNote.trim() ? 1 : 0);
-
-  if (forging) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-2xl bg-forge-blue mx-auto flex items-center justify-center mb-6">
-            <Sparkles className="w-8 h-8 text-white animate-pulse" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Forjando tu apunte…</h2>
-          <p className="text-neutral-500 mb-8">
-            Fusionando {totalSources} {totalSources === 1 ? "fuente" : "fuentes"} en un solo documento.
-          </p>
-          <div className="space-y-3 text-left">
-            {images.length > 0 && <Step done label={`Cloud Vision · OCR de ${images.length} imagen(es)`} />}
-            {(audioFiles.length > 0 || recordedAudio) && <Step done label="Speech-to-Text · transcribiendo audio" />}
-            <Step current label="Gemini · fusionando fuentes" detail="identificando estructura jerárquica…" />
-            <Step pending label="Generando resumen y tags" />
-          </div>
-          <p className="text-xs text-neutral-400 mt-8">ETA · ~10-20s restantes</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-3xl mx-auto px-10 py-10">
       <h1 className="text-3xl font-bold mb-2">Nuevo apunte</h1>
-      <p className="text-neutral-500 mb-8">
-        Sube imágenes, audios, notas ...
-      </p>
+      <p className="text-neutral-500 mb-8">Sube imágenes, audios, notas...</p>
 
       <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-6 mb-4">
         <label className="cursor-pointer">
@@ -157,25 +154,18 @@ export default function NuevoApunte() {
 
       <button
         onClick={submit}
-        className="w-full flex items-center justify-center gap-2 bg-forge-blue text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition"
+        disabled={forging}
+        className="w-full flex items-center justify-center gap-2 bg-forge-blue text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition"
       >
         <Sparkles className="w-4 h-4" /> Forjar apunte
       </button>
-    </div>
-  );
-}
 
-function Step({ done, current, pending, label, detail }) {
-  const bg = done ? "bg-forge-blue text-white" : current ? "bg-forge-blue-soft text-forge-blue border-2 border-forge-blue" : "bg-neutral-100 text-neutral-400";
-  return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg ${current ? "bg-forge-blue-soft" : ""}`}>
-      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${bg}`}>
-        {done ? "✓" : current ? <Loader2 className="w-3 h-3 animate-spin" /> : "·"}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm ${pending ? "text-neutral-400" : "font-medium"}`}>{label}</p>
-        {detail && <p className="text-xs text-neutral-500 font-mono">{detail}</p>}
-      </div>
+      {forging && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-neutral-900 text-white px-5 py-3 rounded-2xl shadow-xl text-sm z-50">
+          <Loader2 className="w-4 h-4 animate-spin text-forge-blue" />
+          <span>Forjando apunte… puedes seguir navegando</span>
+        </div>
+      )}
     </div>
   );
 }
