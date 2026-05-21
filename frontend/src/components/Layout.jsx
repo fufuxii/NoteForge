@@ -8,7 +8,7 @@ const navItems = [
   { to: "/apuntes", label: "Mis apuntes", icon: FileText },
   { to: "/audios", label: "Mis audios", icon: AudioLines },
   { to: "/universidades", label: "Universidades", icon: Building2 },
-  { to: "/traducciones", label: "Traducciones", icon: Languages, disabled: true },
+  { to: "/traducciones", label: "Traducciones", icon: Languages },
   { to: "/papelera", label: "Papelera", icon: Trash2, disabled: true },
 ];
 
