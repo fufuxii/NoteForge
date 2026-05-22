@@ -128,3 +128,15 @@ export async function getApunteStatus(id) {
   return res.json();
 }
 
+export async function saveTranslation(sourceId, lang, title, translatedData) {
+  const res = await fetch(`${BASE}/apuntes/${sourceId}/translate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeader()),
+    },
+    body: JSON.stringify({ lang, title, structure: translatedData.structure, summary: translatedData.summary }),
+  });
+  if (!res.ok) throw new Error(`saveTranslation ${res.status}`);
+  return res.json();
+}
