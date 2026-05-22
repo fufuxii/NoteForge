@@ -20,6 +20,8 @@ def create(uid: str, data: dict) -> str:
         "structure": None,
         "summary": None,
         "audioUrl": None,
+        "isPublic": False,
+        "sourceApunteId": data.get("sourceApunteId"),
         "createdAt": now(),
         "updatedAt": now(),
         "forgedAt": None,
