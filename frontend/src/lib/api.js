@@ -64,6 +64,26 @@ export async function translateApunte(id, lang) {
   return res.json();
 }
 
+const EXPORT_EXT = { pdf: "pdf", docx: "docx", txt: "txt" };
+
+export async function downloadApunte(id, format, lang = "es", title = "apunte") {
+  const res = await fetch(`${BASE}/apuntes/${id}/export?format=${format}&lang=${lang}`, {
+    headers: { ...(await authHeader()) },
+  });
+  if (!res.ok) throw new Error(`export ${res.status}`);
+
+  const blob = await res.blob();
+  const safe = (title || "apunte").replace(/[^\w\sáéíóúàèìòùçñ.\-]/gi, "").trim().replace(/\s+/g, "_") || "apunte";
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safe}.${EXPORT_EXT[format] || format}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export async function deleteApunte(id) {
   const res = await fetch(`${BASE}/apuntes/${id}`, {
     method: "DELETE",

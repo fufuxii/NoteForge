@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, Sparkles, FileText, Volume2, Loader2, Play, Languages, Globe, Lock } from "lucide-react";
-import { getApunte, fetchTTS, translateApunte, setVisibility } from "../lib/api";
+import { ChevronLeft, Sparkles, FileText, Volume2, Loader2, Play, Languages, Globe, Lock, Download } from "lucide-react";
+import { getApunte, fetchTTS, translateApunte, setVisibility, downloadApunte } from "../lib/api";
+import { useToast } from "../components/ui/Toast";
 import PublicarApunteModal from "../components/PublicarApunteModal";
 
 const LANGS = [
@@ -10,8 +11,15 @@ const LANGS = [
   { code: "en", label: "EN", name: "English" },
 ];
 
+const FORMATS = [
+  { fmt: "pdf", label: "PDF" },
+  { fmt: "docx", label: "Word" },
+  { fmt: "txt", label: "TXT" },
+];
+
 export default function DetalleApunte() {
   const { id } = useParams();
+  const toast = useToast();
   const [original, setOriginal] = useState(null);
   const [displayApunte, setDisplayApunte] = useState(null);
   const [activeLang, setActiveLang] = useState(null);
@@ -25,13 +33,15 @@ export default function DetalleApunte() {
   const [isPublic, setIsPublic] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const [exporting, setExporting] = useState(null);
+
   useEffect(() => {
     getApunte(id).then((a) => {
       setOriginal(a);
       setDisplayApunte(a);
       setActiveLang(a.language || "es");
       setIsPublic(a.isPublic || false);
-    }).finally(() => setLoading(false));
+    }).catch(() => toast.error("No se pudo cargar el apunte.")).finally(() => setLoading(false));
   }, [id]);
 
   const switchLang = async (lang) => {
@@ -49,7 +59,7 @@ export default function DetalleApunte() {
       setActiveLang(lang);
       setAudioUrl(null);
     } catch (e) {
-      alert("Error traduciendo: " + e.message);
+      toast.error("Error traduciendo: " + e.message);
     } finally {
       setTranslating(false);
     }
@@ -66,21 +76,44 @@ export default function DetalleApunte() {
       setAudioUrl(URL.createObjectURL(blob));
       setTimeout(() => audioRef.current?.play(), 100);
     } catch (e) {
-      alert("Error generando audio: " + e.message);
+      toast.error("Error generando audio: " + e.message);
     } finally {
       setGeneratingTTS(false);
     }
   };
 
+  const handleExport = async (fmt, label) => {
+    setExporting(fmt);
+    try {
+      await downloadApunte(id, fmt, activeLang, displayApunte.title);
+      toast.success(`Descarga ${label} lista.`);
+    } catch (e) {
+      toast.error("Error al descargar: " + e.message);
+    } finally {
+      setExporting(null);
+    }
+  };
+
   const handleConfirmPublicar = async (asignatura) => {
-    await setVisibility(id, true, asignatura);
-    setIsPublic(true);
-    setShowModal(false);
+    try {
+      await setVisibility(id, true, asignatura);
+      setIsPublic(true);
+      toast.success("Apunte publicado.");
+    } catch {
+      toast.error("No se pudo publicar.");
+    } finally {
+      setShowModal(false);
+    }
   };
 
   const handlePrivar = async () => {
-    await setVisibility(id, false);
-    setIsPublic(false);
+    try {
+      await setVisibility(id, false);
+      setIsPublic(false);
+      toast.info("Apunte ahora privado.");
+    } catch {
+      toast.error("No se pudo cambiar la visibilidad.");
+    }
   };
 
   if (loading) return <div className="text-center py-20 text-neutral-400">Cargando…</div>;
@@ -91,7 +124,7 @@ export default function DetalleApunte() {
   const hasCachedAudio = !!(displayApunte?.ttsPaths?.[activeLang]);
 
   return (
-    <div className="max-w-5xl mx-auto px-10 py-10 grid grid-cols-3 gap-8">
+    <div className="max-w-5xl mx-auto px-10 py-10 grid grid-cols-3 gap-8 animate-fade-in">
       <div className="col-span-2">
         <Link to="/apuntes" className="inline-flex items-center gap-1 text-sm text-neutral-500 mb-6 hover:text-forge-blue">
           <ChevronLeft className="w-4 h-4" /> Mis apuntes
@@ -141,7 +174,6 @@ export default function DetalleApunte() {
       <aside className="col-span-1 space-y-4">
         <div className="border border-neutral-200 rounded-2xl p-5 sticky top-10 space-y-5">
 
-          {/* Idioma */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Languages className="w-4 h-4 text-forge-blue" />
@@ -170,7 +202,6 @@ export default function DetalleApunte() {
             )}
           </div>
 
-          {/* Audio */}
           <div className="border-t pt-5">
             <div className="flex items-center gap-2 mb-1">
               <Volume2 className="w-4 h-4 text-forge-blue" />
@@ -203,7 +234,31 @@ export default function DetalleApunte() {
             )}
           </div>
 
-          {/* Visibilidad */}
+          <div className="border-t pt-5">
+            <div className="flex items-center gap-2 mb-1">
+              <Download className="w-4 h-4 text-forge-blue" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                Descargar
+              </span>
+            </div>
+            <p className="text-sm text-neutral-700 mb-3">
+              {LANGS.find((l) => l.code === activeLang)?.name} · elige formato
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {FORMATS.map(({ fmt, label }) => (
+                <button
+                  key={fmt}
+                  onClick={() => handleExport(fmt, label)}
+                  disabled={exporting !== null}
+                  className="flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-lg border border-neutral-200 text-neutral-700 hover:border-forge-blue hover:text-forge-blue disabled:opacity-50 transition"
+                >
+                  {exporting === fmt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="border-t pt-5">
             <div className="flex items-center gap-2 mb-3">
               {isPublic ? <Globe className="w-4 h-4 text-forge-blue" /> : <Lock className="w-4 h-4 text-neutral-400" />}
