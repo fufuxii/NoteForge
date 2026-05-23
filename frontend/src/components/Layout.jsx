@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, FileText, Plus, AudioLines, Languages, LogOut, Search, Building2 } from "lucide-react";
+import { Home, FileText, Plus, AudioLines, Languages, LogOut, Building2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
 const navItems = [
@@ -23,14 +23,7 @@ export default function Layout() {
           <span className="font-bold text-lg">NoteForge</span>
         </div>
 
-        <div className="px-3 mb-3">
-          <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg text-sm text-neutral-500">
-            <Search className="w-4 h-4" />
-            <span>Buscar en apuntes…</span>
-          </div>
-        </div>
-
-        <nav className="px-2 flex-1">
+        <nav className="px-2 flex-1 mt-2">
           {navItems.map(({ to, label, icon: Icon, end, disabled }) => (
             <NavLink
               key={to}

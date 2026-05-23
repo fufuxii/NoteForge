@@ -61,16 +61,22 @@ export default function Universidades() {
       )}
 
       {!selectedUni && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {universidades.map((u) => (
-            <button key={u.id} onClick={() => handleUni(u)}
-              className="border border-neutral-200 rounded-2xl p-5 text-left hover:border-forge-blue transition">
-              <Building2 className="w-5 h-5 text-forge-blue mb-3" />
-              <p className="font-semibold">{u.nombre}</p>
-              <p className="text-xs text-neutral-500 mt-1">{u.estudios?.length || 0} estudios</p>
-            </button>
-          ))}
-        </div>
+        universidades.length === 0 ? (
+          <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-16 text-center text-neutral-400">
+            No hay universidades disponibles todavía.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {universidades.map((u) => (
+              <button key={u.id} onClick={() => handleUni(u)}
+                className="border border-neutral-200 rounded-2xl p-5 text-left hover:border-forge-blue hover:shadow-md hover:-translate-y-0.5 transition">
+                <Building2 className="w-5 h-5 text-forge-blue mb-3" />
+                <p className="font-semibold">{u.nombre}</p>
+                <p className="text-xs text-neutral-500 mt-1">{u.estudios?.length || 0} estudios</p>
+              </button>
+            ))}
+          </div>
+        )
       )}
 
       {selectedUni && !selectedEstudio && (
