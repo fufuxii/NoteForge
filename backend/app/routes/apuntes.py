@@ -1,9 +1,27 @@
-from flask import Blueprint, jsonify, g, request, Response
+from datetime import datetime, timezone
+from flask import Blueprint, jsonify, g, request, Response, current_app
 from app.auth.firebase_auth import require_auth
 from app.repositories import apuntes_repo
-from app.services import tts_service, translation_service, storage_service
+from app.services import tts_service, translation_service, storage_service, export_service
 
 apuntes_bp = Blueprint("apuntes", __name__)
+
+
+def _fail_if_stale(item):
+    if item.get("status") != "forging":
+        return item
+    created = item.get("createdAt")
+    if not created:
+        return item
+    try:
+        age = (datetime.now(timezone.utc) - created).total_seconds()
+    except TypeError:
+        return item
+    if age > current_app.config["MAX_FORGE_SECONDS"]:
+        apuntes_repo.mark_error(item["id"], "timeout")
+        item["status"] = "error"
+        item["error"] = "timeout"
+    return item
 
 @apuntes_bp.get("")
 @require_auth
@@ -17,6 +35,7 @@ def get_apunte(nid):
     item = apuntes_repo.get(nid)
     if not item or item["ownerUid"] != g.user["uid"]:
         return jsonify({"error": "not_found"}), 404
+    item = _fail_if_stale(item)
     return jsonify(item)
 
 @apuntes_bp.get("/search")
@@ -64,6 +83,38 @@ def tts(nid):
 
     return Response(audio_bytes, mimetype="audio/mpeg")
 
+@apuntes_bp.get("/<nid>/export")
+@require_auth
+def export_apunte(nid):
+    fmt = request.args.get("format", "pdf").lower()
+    if fmt not in ("pdf", "docx", "txt"):
+        return jsonify({"error": "invalid_format"}), 400
+
+    item = apuntes_repo.get(nid)
+    if not item or item["ownerUid"] != g.user["uid"]:
+        return jsonify({"error": "not_found"}), 404
+
+    if item.get("status") != "ready":
+        return jsonify({"error": "not_ready"}), 409
+
+    lang = request.args.get("lang", item.get("language") or "es")
+    if lang not in ("es", "ca", "en"):
+        lang = "es"
+    if lang != (item.get("language") or "es"):
+        item = translation_service.translate_apunte(item, lang)
+
+    data, mimetype, ext = export_service.render(item, fmt)
+    filename = export_service.safe_filename(item.get("title") or "apunte", ext)
+
+    return Response(
+        data,
+        mimetype=mimetype,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
 @apuntes_bp.get("/<nid>/translate")
 @require_auth
 def translate_endpoint(nid):
@@ -101,7 +152,7 @@ def translate_save(nid):
         "tags":           item.get("tags", []),
         "language":       target,
         "sources":        [],
-        "sourceApunteId": nid,  
+        "sourceApunteId": nid,
     })
 
     apuntes_repo.mark_ready(
@@ -136,4 +187,3 @@ def share_apunte(nid):
     asignatura = body.get("asignatura", None)
     apuntes_repo.set_public(nid, is_public, asignatura)
     return jsonify({"id": nid, "isPublic": is_public, "asignatura": asignatura})
-
