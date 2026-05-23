@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, FileText, Plus, AudioLines, Languages, Trash2, LogOut, Search, Building2 } from "lucide-react";
+import { Home, FileText, Plus, AudioLines, Languages, LogOut, Search, Building2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
 const navItems = [
@@ -8,8 +8,7 @@ const navItems = [
   { to: "/apuntes", label: "Mis apuntes", icon: FileText },
   { to: "/audios", label: "Mis audios", icon: AudioLines },
   { to: "/universidades", label: "Universidades", icon: Building2 },
-  { to: "/traducciones", label: "Traducciones", icon: Languages, disabled: true },
-  { to: "/papelera", label: "Papelera", icon: Trash2, disabled: true },
+  { to: "/traducciones", label: "Traducciones", icon: Languages },
 ];
 
 export default function Layout() {

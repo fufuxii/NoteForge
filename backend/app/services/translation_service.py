@@ -69,3 +69,21 @@ def translate_apunte(apunte: dict, target_lang: str) -> dict:
         setter(tr)
 
     return out
+
+def detect_language(text: str) -> str:
+    if not text or not text.strip():
+        return "es"
+    try:
+        client = _get_client()
+        parent = f"projects/{current_app.config['PROJECT_ID']}/locations/global"
+        response = client.detect_language(
+            request={
+                "parent": parent,
+                "content": text[:1000],
+                "mime_type": "text/plain",
+            }
+        )
+        detected = response.languages[0].language_code if response.languages else "es"
+        return detected if detected in ("es", "ca", "en") else "es"
+    except Exception:
+        return "es"

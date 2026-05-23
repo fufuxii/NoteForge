@@ -78,6 +78,44 @@ def translate_endpoint(nid):
     translated = translation_service.translate_apunte(item, target)
     return jsonify(translated)
 
+@apuntes_bp.post("/<nid>/translate")
+@require_auth
+def translate_save(nid):
+    """Guarda la traducción como apunte nuevo independiente."""
+    body   = request.get_json(silent=True) or {}
+    target = body.get("lang")
+    title  = (body.get("title") or "").strip()
+
+    if target not in ("es", "ca", "en"):
+        return jsonify({"error": "invalid_lang"}), 400
+
+    item = apuntes_repo.get(nid)
+    if not item or item["ownerUid"] != g.user["uid"]:
+        return jsonify({"error": "not_found"}), 404
+
+    translated = translation_service.translate_apunte(item, target)
+
+    new_id = apuntes_repo.create(g.user["uid"], {
+        "title":          title or translated.get("title", "Apunte traducido"),
+        "asignaturaId":   item.get("asignaturaId"),
+        "tags":           item.get("tags", []),
+        "language":       target,
+        "sources":        [],
+        "sourceApunteId": nid,  
+    })
+
+    apuntes_repo.mark_ready(
+        new_id,
+        structure=translated.get("structure"),
+        summary=translated.get("summary", ""),
+        tags=item.get("tags", []),
+    )
+
+    if item.get("isPublic"):
+        apuntes_repo.update(new_id, {"isPublic": True})
+
+    return jsonify({"id": new_id, "ok": True}), 201
+
 @apuntes_bp.delete("/<nid>")
 @require_auth
 def delete_apunte(nid):
@@ -98,3 +136,4 @@ def share_apunte(nid):
     asignatura = body.get("asignatura", None)
     apuntes_repo.set_public(nid, is_public, asignatura)
     return jsonify({"id": nid, "isPublic": is_public, "asignatura": asignatura})
+

@@ -1,5 +1,5 @@
 from app.repositories import apuntes_repo
-from app.services import storage_service, vision_service, gemini_service, speech_service
+from app.services import storage_service, vision_service, gemini_service, speech_service, translation_service
 
 def forge(uid: str, asignatura_id, images, audios, texts) -> str:
     sources_meta = []
@@ -31,12 +31,19 @@ def forge(uid: str, asignatura_id, images, audios, texts) -> str:
     try:
         result = gemini_service.forge_note(sources_text)
         apuntes_repo.update(nid, {"title": result.get("title", "Apunte sin título")})
+
+        combined_text = " ".join(s["text"] for s in sources_text if s.get("text"))
+        detected_lang = translation_service.detect_language(combined_text)
+
         apuntes_repo.mark_ready(
             nid,
             structure=result,
             summary=result.get("summary", ""),
             tags=result.get("tags", []),
         )
+
+        apuntes_repo.update(nid, {"language": detected_lang})
+
     except Exception as e:
         apuntes_repo.mark_error(nid, str(e))
         raise
@@ -74,11 +81,18 @@ def forge_async(uid: str, asignatura_id, images_data, audios_data, texts, nid: s
 
         result = gemini_service.forge_note(sources_text)
         apuntes_repo.update(nid, {"title": result.get("title", "Apunte sin título")})
+
+        combined_text = " ".join(s["text"] for s in sources_text if s.get("text"))
+        detected_lang = translation_service.detect_language(combined_text)
+
         apuntes_repo.mark_ready(
             nid,
             structure=result,
             summary=result.get("summary", ""),
             tags=result.get("tags", []),
         )
+
+        apuntes_repo.update(nid, {"language": detected_lang})
+
     except Exception as e:
         apuntes_repo.mark_error(nid, str(e))
