@@ -2,53 +2,70 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileText, BookOpen, Trash2, Globe, Lock } from "lucide-react";
 import { listApuntes, deleteApunte, setVisibility } from "../lib/api";
+import { useToast } from "../components/ui/Toast";
 import PublicarApunteModal from "../components/PublicarApunteModal";
 
-
-
-function relativeTime(date) {
-  if (!date) return "";
-  const d = new Date(date);
-  const diff = (Date.now() - d.getTime()) / 1000;
-  if (diff < 60) return "hace " + Math.round(diff) + "s";
-  if (diff < 3600) return "hace " + Math.round(diff / 60) + "m";
-  if (diff < 86400) return "hace " + Math.round(diff / 3600) + "h";
-  return "hace " + Math.round(diff / 86400) + "d";
-}
-
 export default function MisApuntes() {
+  const toast = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalItem, setModalItem] = useState(null);
+  const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
     listApuntes()
       .then((r) => setItems(r.items || []))
+      .catch(() => toast.error("No se pudieron cargar los apuntes."))
       .finally(() => setLoading(false));
   }, []);
 
-  const handleDelete = async (e, id) => {
-  e.preventDefault(); 
-  if (!confirm("¿Eliminar estos apuntes? Esta acción no se puede deshacer.")) return;
-  await deleteApunte(id);
-  setItems((prev) => prev.filter((a) => a.id !== id));
+  const handleDelete = async (e, item) => {
+    e.preventDefault();
+    if (!confirm("¿Eliminar este apunte? Esta acción no se puede deshacer.")) return;
+    const prev = items;
+    setItems((list) => list.filter((a) => a.id !== item.id));
+    try {
+      await deleteApunte(item.id);
+      toast.success(`"${item.title}" eliminado.`);
+    } catch {
+      setItems(prev);
+      toast.error("No se pudo eliminar el apunte.");
+    }
   };
 
   const handleVisibility = async (e, item) => {
-  e.preventDefault();
-  if (!item.isPublic) {
-    setModalItem(item); 
-  } else {
-    const updated = await setVisibility(item.id, false);
-    setItems((prev) => prev.map((a) => a.id === item.id ? { ...a, isPublic: updated.isPublic } : a));
-  }
-};
+    e.preventDefault();
+    if (!item.isPublic) {
+      setModalItem(item);
+      return;
+    }
+    setBusyId(item.id);
+    try {
+      const updated = await setVisibility(item.id, false);
+      setItems((list) => list.map((a) => (a.id === item.id ? { ...a, isPublic: updated.isPublic } : a)));
+      toast.info("Apunte ahora privado.");
+    } catch {
+      toast.error("No se pudo cambiar la visibilidad.");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
-const handleConfirmPublicar = async (asignatura) => {
-  const updated = await setVisibility(modalItem.id, true, asignatura);
-  setItems((prev) => prev.map((a) => a.id === modalItem.id ? { ...a, isPublic: updated.isPublic, asignatura: updated.asignatura } : a));
-  setModalItem(null);
-};
+  const handleConfirmPublicar = async (asignatura) => {
+    try {
+      const updated = await setVisibility(modalItem.id, true, asignatura);
+      setItems((list) =>
+        list.map((a) =>
+          a.id === modalItem.id ? { ...a, isPublic: updated.isPublic, asignatura: updated.asignatura } : a
+        )
+      );
+      toast.success("Apunte publicado.");
+    } catch {
+      toast.error("No se pudo publicar el apunte.");
+    } finally {
+      setModalItem(null);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-10 py-10">
@@ -56,13 +73,18 @@ const handleConfirmPublicar = async (asignatura) => {
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-neutral-400" />
           <h1 className="text-lg font-semibold">Mis apuntes</h1>
+          {!loading && <span className="text-sm text-neutral-400">· {items.length}</span>}
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center text-neutral-400 py-20">Cargando…</div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="skeleton h-44" />
+          ))}
+        </div>
       ) : items.length === 0 ? (
-        <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-16 text-center">
+        <div className="animate-fade-in border-2 border-dashed border-neutral-200 rounded-2xl p-16 text-center">
           <p className="text-neutral-400 mb-4">No tienes apuntes todavía.</p>
           <Link to="/nuevo" className="text-forge-blue font-medium">
             Forjar tu primer apunte →
@@ -70,11 +92,12 @@ const handleConfirmPublicar = async (asignatura) => {
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {items.map((a) => (
+          {items.map((a, i) => (
             <Link
               key={a.id}
               to={`/apuntes/${a.id}`}
-              className="border border-neutral-200 rounded-2xl p-5 hover:border-forge-blue transition flex flex-col min-h-44"
+              style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
+              className="animate-fade-in border border-neutral-200 rounded-2xl p-5 hover:border-forge-blue hover:shadow-md hover:-translate-y-0.5 transition flex flex-col min-h-44"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5 text-xs text-neutral-500">
@@ -82,12 +105,19 @@ const handleConfirmPublicar = async (asignatura) => {
                   {a.tags?.[0] || "Apunte"}
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={(e) => handleVisibility(e, a)} title={a.isPublic ? "Hacer privado" : "Publicar"}
-                    className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-forge-blue transition">
+                  <button
+                    onClick={(e) => handleVisibility(e, a)}
+                    disabled={busyId === a.id}
+                    title={a.isPublic ? "Hacer privado" : "Publicar"}
+                    className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-forge-blue disabled:opacity-50 transition"
+                  >
                     {a.isPublic ? <Globe className="w-3.5 h-3.5 text-forge-blue" /> : <Lock className="w-3.5 h-3.5" />}
                   </button>
-                  <button onClick={(e) => handleDelete(e, a.id)} title="Eliminar"
-                    className="p-1.5 rounded-lg hover:bg-red-50 text-neutral-400 hover:text-red-500 transition">
+                  <button
+                    onClick={(e) => handleDelete(e, a)}
+                    title="Eliminar"
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-neutral-400 hover:text-red-500 transition"
+                  >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -100,6 +130,7 @@ const handleConfirmPublicar = async (asignatura) => {
           ))}
         </div>
       )}
+
       {modalItem && (
         <PublicarApunteModal
           onConfirm={handleConfirmPublicar}

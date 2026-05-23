@@ -16,3 +16,49 @@ body {
   background: #fafafa;
   color: #111;
 }
+
+@keyframes nf-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nf-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nf-toast-in {
+  from { opacity: 0; transform: translateX(24px) scale(0.96); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes nf-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.animate-fade-in { animation: nf-fade-in 0.4s ease both; }
+.animate-slide-up { animation: nf-slide-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-toast-in { animation: nf-toast-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 37%, #f0f0f0 63%);
+  background-size: 800px 100%;
+  animation: nf-shimmer 1.4s ease-in-out infinite;
+  border-radius: 0.75rem;
+}
+
+main::-webkit-scrollbar { width: 10px; }
+main::-webkit-scrollbar-thumb {
+  background: #e5e5e5;
+  border-radius: 8px;
+  border: 2px solid #fafafa;
+}
+main::-webkit-scrollbar-thumb:hover { background: #d4d4d4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-toast-in,
+  .skeleton { animation: none; }
+}
