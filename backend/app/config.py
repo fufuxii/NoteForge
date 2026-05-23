@@ -7,3 +7,4 @@ class Config:
     ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
     GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
     DEV_MOCK_AUTH = os.environ.get("DEV_MOCK_AUTH", "0") == "1"
+    MAX_FORGE_SECONDS = int(os.environ.get("MAX_FORGE_SECONDS", "1800"))
