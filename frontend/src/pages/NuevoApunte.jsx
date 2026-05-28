@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Image as ImageIcon, FileText, X, Loader2, AudioLines } from "lucide-react";
-import { forjar, getApunteStatus } from "../lib/api";
+import { forjar } from "../lib/api";
 import AudioRecorder from "../components/AudioRecorder";
 
 export default function NuevoApunte() {
@@ -10,8 +10,9 @@ export default function NuevoApunte() {
   const [audioFiles, setAudioFiles] = useState([]);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [textNote, setTextNote] = useState("");
-  const [forging, setForging] = useState(false);
+  const [sending, setSending] = useState(false);  
   const [error, setError] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const addImages = (files) => setImages((prev) => [...prev, ...Array.from(files)]);
   const addAudios = (files) => setAudioFiles((prev) => [...prev, ...Array.from(files)]);
@@ -29,10 +30,10 @@ export default function NuevoApunte() {
       return;
     }
     setError(null);
-    setForging(true);
+    setSending(true); 
 
     try {
-      const { id } = await forjar({
+      await forjar({
         images,
         audios: allAudios,
         texts: textNote.trim() ? [textNote.trim()] : [],
@@ -42,29 +43,12 @@ export default function NuevoApunte() {
       setAudioFiles([]);
       setRecordedAudio(null);
       setTextNote("");
-
-      const poll = setInterval(async () => {
-        try {
-          const apunte = await getApunteStatus(id);
-          if (apunte.status === "ready") {
-            clearInterval(poll);
-            setForging(false);
-            navigate(`/apuntes/${id}`);
-          } else if (apunte.status === "error") {
-            clearInterval(poll);
-            setForging(false);
-            setError("Error al forjar el apunte.");
-          }
-        } catch {
-          clearInterval(poll);
-          setForging(false);
-          setError("Error comprobando el estado.");
-        }
-      }, 2000);
+      setSending(false);
+      setPendingCount((prev) => prev + 1); 
 
     } catch (e) {
       setError(e.message || "Error al forjar.");
-      setForging(false);
+      setSending(false);
     }
   };
 
@@ -75,7 +59,7 @@ export default function NuevoApunte() {
 
       <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-6 mb-4">
         <label className="cursor-pointer">
-          <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => addImages(e.target.files)} />
+          <input key={images.length} type="file" multiple accept="image/*" className="hidden" onChange={(e) => addImages(e.target.files)} />
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-forge-blue-soft flex items-center justify-center">
               <ImageIcon className="w-5 h-5 text-forge-blue" />
@@ -114,7 +98,7 @@ export default function NuevoApunte() {
         <AudioRecorder onChange={setRecordedAudio} />
 
         <label className="cursor-pointer block mt-3">
-          <input type="file" multiple accept="audio/*" className="hidden" onChange={(e) => addAudios(e.target.files)} />
+          <input key={audioFiles.length} type="file" multiple accept="audio/*" className="hidden" onChange={(e) => addAudios(e.target.files)} />
           <div className="text-sm text-neutral-500 hover:text-forge-blue text-center py-2 border-t border-neutral-100">
             o subir archivo de audio (.mp3, .m4a, .wav)
           </div>
@@ -152,20 +136,33 @@ export default function NuevoApunte() {
         <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mb-4">{error}</div>
       )}
 
-      <button
-        onClick={submit}
-        disabled={forging}
-        className="w-full flex items-center justify-center gap-2 bg-forge-blue text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition"
-      >
-        <Sparkles className="w-4 h-4" /> Forjar apunte
-      </button>
-
-      {forging && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-neutral-900 text-white px-5 py-3 rounded-2xl shadow-xl text-sm z-50">
-          <Loader2 className="w-4 h-4 animate-spin text-forge-blue" />
-          <span>Forjando apunte… puedes seguir navegando</span>
+      {pendingCount > 0 && (
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 mb-4 text-sm">
+          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+          <span>
+            {pendingCount === 1
+              ? "1 apunte forjándose en segundo plano."
+              : `${pendingCount} apuntes forjándose en segundo plano.`}
+            {" "}Los verás en{" "}
+            <button
+              onClick={() => { setPendingCount(0); navigate("/apuntes"); }}
+              className="underline font-medium hover:text-blue-900"
+            >
+              Mis apuntes
+            </button>
+            {" "}cuando estén listos.
+          </span>
         </div>
       )}
+
+      <button
+        onClick={submit}
+        disabled={sending}
+        className="w-full flex items-center justify-center gap-2 bg-forge-blue text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+      >
+        {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+        {sending ? "Enviando…" : "Forjar apunte"}
+      </button>
     </div>
   );
 }
