@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, g, current_app
 from app.auth.firebase_auth import require_auth
 from app.services.forja_service import forge_async
 from app.repositories import apuntes_repo
+from app.repositories import users_repo
 from concurrent.futures import ThreadPoolExecutor
 
 forja_bp = Blueprint("forja", __name__)
@@ -28,9 +29,16 @@ def forjar():
     app = current_app._get_current_object()
     uid = g.user["uid"]
 
+    user_profile = users_repo.get(uid) or {}
+    context = {
+        "universidad": user_profile.get("universidad", ""),
+        "estudios":    user_profile.get("estudios", ""),
+        "asignatura":  asignatura_id or "",
+    }
+
     def run():
         with app.app_context():
-            forge_async(uid, asignatura_id, images_data, audios_data, texts, nid)
+            forge_async(uid, asignatura_id, images_data, audios_data, texts, nid, context)
 
     _executor.submit(run)
 

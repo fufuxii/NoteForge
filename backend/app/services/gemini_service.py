@@ -48,14 +48,31 @@ Reglas:
 - Las etiquetas deben ser sustantivos cortos (1-2 palabras).
 """
 
-def forge_note(sources_text: list[dict]) -> dict:
+def forge_note(sources_text: list[dict], context: dict = None) -> dict:
     client = _get_client()
     parts_text = "\n\n".join(
         f"[FUENTE {i+1} · {s['kind']}]\n{s['text']}"
         for i, s in enumerate(sources_text)
         if s.get("text")
     )
-    full_prompt = f"{FORGE_PROMPT}\n\n=== FUENTES ===\n{parts_text}\n\n=== JSON ==="
+
+    context_block = ""
+    if context:
+      parts = []
+      if context.get("universidad"):
+          parts.append(f"Universidad: {context['universidad']}")
+      if context.get("estudios"):
+          parts.append(f"Carrera: {context['estudios']}")
+      if context.get("asignatura"):
+          parts.append(f"Asignatura: {context['asignatura']}")
+      if parts:
+          context_block = "=== CONTEXTO DEL ESTUDIANTE ===\n" + "\n".join(parts) + "\n\n"
+    
+    full_prompt = f"{FORGE_PROMPT}\n\n{context_block}=== FUENTES ===\n{parts_text}\n\n=== JSON ==="
+
+    print("\n====== PROMPT ENVIADO A GEMINI ======")
+    print(full_prompt)
+    print("=====================================\n")
 
     response = client.models.generate_content(
         model=current_app.config["GEMINI_MODEL"],

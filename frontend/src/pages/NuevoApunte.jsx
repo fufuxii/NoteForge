@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Image as ImageIcon, FileText, X, Loader2, AudioLines } from "lucide-react";
-import { forjar } from "../lib/api";
+import { forjar, getProfile, getAllUniversidades } from "../lib/api";
 import AudioRecorder from "../components/AudioRecorder";
+import { useAuth } from "../auth/AuthContext";
 
 export default function NuevoApunte() {
   const navigate = useNavigate();
@@ -13,6 +14,17 @@ export default function NuevoApunte() {
   const [sending, setSending] = useState(false);  
   const [error, setError] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [asignaturaId, setAsignaturaId] = useState("");
+const [asignaturas, setAsignaturas] = useState([]);
+
+useEffect(() => {
+  Promise.all([getProfile(), getAllUniversidades()]).then(([perfil, unis]) => {
+    if (!perfil.universidad || !perfil.estudios) return;
+    const uni = unis.find((u) => u.nombre === perfil.universidad);
+    const estudio = uni?.estudios?.find((e) => e.nombre === perfil.estudios);
+    setAsignaturas(estudio?.asignaturas || []);
+  });
+}, []);
 
   const addImages = (files) => setImages((prev) => [...prev, ...Array.from(files)]);
   const addAudios = (files) => setAudioFiles((prev) => [...prev, ...Array.from(files)]);
@@ -37,6 +49,7 @@ export default function NuevoApunte() {
         images,
         audios: allAudios,
         texts: textNote.trim() ? [textNote.trim()] : [],
+        asignaturaId: asignaturaId || null,
       });
 
       setImages([]);
@@ -155,6 +168,24 @@ export default function NuevoApunte() {
         </div>
       )}
 
+      {asignaturas.length > 0 && (
+        <div className="border border-neutral-200 rounded-2xl p-6 mb-6">
+          <label className="text-sm font-medium text-neutral-700 block mb-2">
+            Asignatura (opcional)
+          </label>
+          <select
+            value={asignaturaId}
+            onChange={(e) => setAsignaturaId(e.target.value)}
+            className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-forge-blue bg-white"
+          >
+            <option value="">Sin asignatura</option>
+            {asignaturas.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <button
         onClick={submit}
         disabled={sending}
@@ -163,6 +194,7 @@ export default function NuevoApunte() {
         {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
         {sending ? "Enviando…" : "Forjar apunte"}
       </button>
+
     </div>
   );
 }

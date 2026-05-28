@@ -50,7 +50,7 @@ def forge(uid: str, asignatura_id, images, audios, texts) -> str:
 
     return nid
 
-def forge_async(uid: str, asignatura_id, images_data, audios_data, texts, nid: str) -> None:
+def forge_async(uid, asignatura_id, images_data, audios_data, texts, nid, context=None):
     from io import BytesIO
     from werkzeug.datastructures import FileStorage
 
@@ -79,7 +79,7 @@ def forge_async(uid: str, asignatura_id, images_data, audios_data, texts, nid: s
 
         apuntes_repo.update(nid, {"sources": sources_meta})
 
-        result = gemini_service.forge_note(sources_text)
+        result = gemini_service.forge_note(sources_text, context=context)
         apuntes_repo.update(nid, {"title": result.get("title", "Apunte sin título")})
 
         combined_text = " ".join(s["text"] for s in sources_text if s.get("text"))
