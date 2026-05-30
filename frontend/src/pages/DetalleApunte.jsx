@@ -1,15 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, Sparkles, FileText, Volume2, Loader2, Play, Languages, Globe, Lock, Download } from "lucide-react";
-import { getApunte, fetchTTS, translateApunte, setVisibility, downloadApunte } from "../lib/api";
+import { ChevronLeft, Sparkles, FileText, Volume2, Loader2, Play, Globe, Lock, Download } from "lucide-react";
+import { getApunte, fetchTTS, setVisibility, downloadApunte } from "../lib/api";
 import { useToast } from "../components/ui/Toast";
 import PublicarApunteModal from "../components/PublicarApunteModal";
-
-const LANGS = [
-  { code: "es", label: "ES", name: "Castellano" },
-  { code: "ca", label: "CA", name: "Català" },
-  { code: "en", label: "EN", name: "English" },
-];
 
 const FORMATS = [
   { fmt: "pdf", label: "PDF" },
@@ -22,9 +16,7 @@ export default function DetalleApunte() {
   const toast = useToast();
   const [original, setOriginal] = useState(null);
   const [displayApunte, setDisplayApunte] = useState(null);
-  const [activeLang, setActiveLang] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [translating, setTranslating] = useState(false);
 
   const [audioUrl, setAudioUrl] = useState(null);
   const [generatingTTS, setGeneratingTTS] = useState(false);
@@ -39,31 +31,9 @@ export default function DetalleApunte() {
     getApunte(id).then((a) => {
       setOriginal(a);
       setDisplayApunte(a);
-      setActiveLang(a.language || "es");
       setIsPublic(a.isPublic || false);
     }).catch(() => toast.error("No se pudo cargar el apunte.")).finally(() => setLoading(false));
   }, [id]);
-
-  const switchLang = async (lang) => {
-    if (lang === activeLang) return;
-    if (lang === (original.language || "es")) {
-      setDisplayApunte(original);
-      setActiveLang(lang);
-      setAudioUrl(null);
-      return;
-    }
-    setTranslating(true);
-    try {
-      const translated = await translateApunte(id, lang);
-      setDisplayApunte(translated);
-      setActiveLang(lang);
-      setAudioUrl(null);
-    } catch (e) {
-      toast.error("Error traduciendo: " + e.message);
-    } finally {
-      setTranslating(false);
-    }
-  };
 
   const handleListen = async () => {
     if (audioUrl) {
@@ -72,7 +42,7 @@ export default function DetalleApunte() {
     }
     setGeneratingTTS(true);
     try {
-      const blob = await fetchTTS(id, activeLang);
+      const blob = await fetchTTS(id, original.language || "es");
       setAudioUrl(URL.createObjectURL(blob));
       setTimeout(() => audioRef.current?.play(), 100);
     } catch (e) {
@@ -85,7 +55,7 @@ export default function DetalleApunte() {
   const handleExport = async (fmt, label) => {
     setExporting(fmt);
     try {
-      await downloadApunte(id, fmt, activeLang, displayApunte.title);
+      await downloadApunte(id, fmt, original.language || "es", displayApunte.title);
       toast.success(`Descarga ${label} lista.`);
     } catch (e) {
       toast.error("Error al descargar: " + e.message);
@@ -120,8 +90,6 @@ export default function DetalleApunte() {
   if (!displayApunte) return <div className="text-center py-20 text-neutral-400">Apunte no encontrado.</div>;
 
   const structure = displayApunte.structure || {};
-  const isTranslated = activeLang !== (original.language || "es");
-  const hasCachedAudio = !!(displayApunte?.ttsPaths?.[activeLang]);
 
   return (
     <div className="max-w-5xl mx-auto px-10 py-10 grid grid-cols-3 gap-8 animate-fade-in">
@@ -129,13 +97,6 @@ export default function DetalleApunte() {
         <Link to="/apuntes" className="inline-flex items-center gap-1 text-sm text-neutral-500 mb-6 hover:text-forge-blue">
           <ChevronLeft className="w-4 h-4" /> Mis apuntes
         </Link>
-
-        {isTranslated && (
-          <div className="mb-4 inline-flex items-center gap-2 text-xs px-3 py-1.5 bg-forge-blue-soft text-forge-blue rounded-full">
-            <Languages className="w-3 h-3" />
-            Traducido del {(original.language || "es").toUpperCase()} con Cloud Translation
-          </div>
-        )}
 
         <div className="flex gap-2 mb-4 flex-wrap">
           {displayApunte.tags?.map((t) => (
@@ -174,34 +135,6 @@ export default function DetalleApunte() {
       <aside className="col-span-1 space-y-4">
         <div className="border border-neutral-200 rounded-2xl p-5 sticky top-10 space-y-5">
 
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Languages className="w-4 h-4 text-forge-blue" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Idioma</span>
-            </div>
-            <div className="flex gap-1">
-              {LANGS.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => switchLang(l.code)}
-                  disabled={translating}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition disabled:opacity-50 ${
-                    activeLang === l.code
-                      ? "bg-forge-blue text-white"
-                      : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-                  }`}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
-            {translating && (
-              <p className="text-xs text-neutral-500 mt-2 flex items-center gap-1.5">
-                <Loader2 className="w-3 h-3 animate-spin" /> Traduciendo…
-              </p>
-            )}
-          </div>
-
           <div className="border-t pt-5">
             <div className="flex items-center gap-2 mb-1">
               <Volume2 className="w-4 h-4 text-forge-blue" />
@@ -210,7 +143,7 @@ export default function DetalleApunte() {
               </span>
             </div>
             <p className="text-sm text-neutral-700 mb-3">
-              Voz · {LANGS.find((l) => l.code === activeLang)?.name} · TTS
+              Voz · {original.language?.toUpperCase() || "ES"} · TTS
             </p>
             {!audioUrl ? (
               <button
@@ -221,7 +154,7 @@ export default function DetalleApunte() {
                 {generatingTTS ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    {hasCachedAudio ? "Cargando audio…" : "Generando audio…"}
+                    Generando audio…
                   </>
                 ) : (
                   <>
@@ -242,7 +175,7 @@ export default function DetalleApunte() {
               </span>
             </div>
             <p className="text-sm text-neutral-700 mb-3">
-              {LANGS.find((l) => l.code === activeLang)?.name} · elige formato
+              {original.language?.toUpperCase() || "ES"} · elige formato
             </p>
             <div className="grid grid-cols-3 gap-2">
               {FORMATS.map(({ fmt, label }) => (

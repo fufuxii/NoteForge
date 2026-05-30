@@ -132,6 +132,24 @@ useEffect(() => {
         )}
       </div>
 
+      {asignaturas.length > 0 && (
+        <div className="border border-neutral-200 rounded-2xl p-6 mb-6">
+          <label className="text-sm font-medium text-neutral-700 block mb-2">
+            Asignatura (opcional)
+          </label>
+          <select
+            value={asignaturaId}
+            onChange={(e) => setAsignaturaId(e.target.value)}
+            className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-forge-blue bg-white"
+          >
+            <option value="">Sin asignatura</option>
+            {asignaturas.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="border border-neutral-200 rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <FileText className="w-4 h-4 text-neutral-500" />
@@ -165,24 +183,6 @@ useEffect(() => {
             </button>
             {" "}cuando estén listos.
           </span>
-        </div>
-      )}
-
-      {asignaturas.length > 0 && (
-        <div className="border border-neutral-200 rounded-2xl p-6 mb-6">
-          <label className="text-sm font-medium text-neutral-700 block mb-2">
-            Asignatura (opcional)
-          </label>
-          <select
-            value={asignaturaId}
-            onChange={(e) => setAsignaturaId(e.target.value)}
-            className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-forge-blue bg-white"
-          >
-            <option value="">Sin asignatura</option>
-            {asignaturas.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
         </div>
       )}
 
