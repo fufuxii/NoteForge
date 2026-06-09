@@ -1,3 +1,4 @@
+# Rutas del perfil de usuario (lectura y actualización).
 from flask import Blueprint, jsonify, g, request
 from app.auth.firebase_auth import require_auth
 from app.repositories import users_repo
@@ -6,6 +7,7 @@ users_bp = Blueprint("users", __name__)
 
 @users_bp.get("/profile")
 @require_auth
+# Devuelve el perfil o uno vacío si todavía no existe.
 def get_profile():
     profile = users_repo.get(g.user["uid"]) or {"uid": g.user["uid"], "universidad": "", "estudios": ""}
     return jsonify(profile)

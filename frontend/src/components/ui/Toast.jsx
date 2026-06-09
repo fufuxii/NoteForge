@@ -1,3 +1,4 @@
+// Sistema de notificaciones (toasts) accesible desde cualquier componente vía useToast.
 import { createContext, useContext, useState, useCallback } from "react";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
@@ -6,6 +7,7 @@ const ToastCtx = createContext({ success: noop, error: noop, info: noop });
 
 let _id = 0;
 
+// Icono y colores por tipo de toast.
 const META = {
   success: { Icon: CheckCircle2, ring: "border-green-200", icon: "text-green-500" },
   error: { Icon: AlertCircle, ring: "border-red-200", icon: "text-red-500" },
@@ -19,6 +21,7 @@ export function ToastProvider({ children }) {
     setToasts((t) => t.filter((x) => x.id !== id));
   }, []);
 
+  // Añade un toast y programa su desaparición automática.
   const push = useCallback((message, type, duration = 3500) => {
     const id = ++_id;
     setToasts((t) => [...t, { id, message, type }]);

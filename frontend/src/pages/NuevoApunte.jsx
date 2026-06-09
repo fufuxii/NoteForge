@@ -1,3 +1,4 @@
+// Formulario de creación: reúne imágenes, audios y notas y los envía a forjar.
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Image as ImageIcon, FileText, X, Loader2, AudioLines } from "lucide-react";
@@ -18,6 +19,7 @@ export default function NuevoApunte() {
 const [asignaturas, setAsignaturas] = useState([]);
 
 useEffect(() => {
+  // Carga las asignaturas del perfil para el selector opcional.
   Promise.all([getProfile(), getAllUniversidades()]).then(([perfil, unis]) => {
     if (!perfil.universidad || !perfil.estudios) return;
     const uni = unis.find((u) => u.nombre === perfil.universidad);
@@ -31,8 +33,10 @@ useEffect(() => {
   const removeImage = (i) => setImages((prev) => prev.filter((_, idx) => idx !== i));
   const removeAudio = (i) => setAudioFiles((prev) => prev.filter((_, idx) => idx !== i));
 
+  // Junta todas las fuentes y lanza la forja en segundo plano.
   const submit = async () => {
     const allAudios = [...audioFiles];
+    // Convierte la grabación en directo en un fichero adjuntable.
     if (recordedAudio) {
       const f = new File([recordedAudio], `grabacion-${Date.now()}.webm`, { type: "audio/webm" });
       allAudios.push(f);
@@ -57,6 +61,7 @@ useEffect(() => {
       setRecordedAudio(null);
       setTextNote("");
       setSending(false);
+      // Suma un apunte 'en proceso' al aviso inferior.
       setPendingCount((prev) => prev + 1); 
 
     } catch (e) {

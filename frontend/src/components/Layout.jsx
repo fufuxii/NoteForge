@@ -1,7 +1,9 @@
+// Layout con barra lateral de navegación y pie de perfil/cierre de sesión.
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Home, FileText, Plus, AudioLines, Languages, LogOut, Building2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
+// Entradas del menú lateral.
 const navItems = [
   { to: "/", label: "Inicio", icon: Home, end: true },
   { to: "/nuevo", label: "Nuevo apunte", icon: Plus },

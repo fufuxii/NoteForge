@@ -1,3 +1,4 @@
+// Listado de apuntes propios con acciones de borrar y publicar.
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileText, BookOpen, Trash2, Globe, Lock } from "lucide-react";
@@ -19,6 +20,7 @@ export default function MisApuntes() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Borrado optimista: quita el apunte de la lista y revierte si falla.
   const handleDelete = async (e, item) => {
     e.preventDefault();
     if (!confirm("¿Eliminar este apunte? Esta acción no se puede deshacer.")) return;
@@ -33,6 +35,7 @@ export default function MisApuntes() {
     }
   };
 
+  // Si es privado abre el modal de publicar; si es público lo hace privado.
   const handleVisibility = async (e, item) => {
     e.preventDefault();
     if (!item.isPublic) {

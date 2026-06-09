@@ -1,3 +1,4 @@
+// Pantalla de inicio de sesión con Google.
 import { Sparkles } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 

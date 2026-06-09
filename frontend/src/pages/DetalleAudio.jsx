@@ -1,8 +1,10 @@
+// Reproductor TTS del apunte con selector de idioma (ES/CA/EN).
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronLeft, AudioLines, Play, Pause, Loader2 } from "lucide-react";
 import { getApunte, fetchTTS } from "../lib/api";
 
+// Idiomas disponibles para la narración.
 const LANGS = [
   { code: "es", label: "ES", name: "Castellano" },
   { code: "ca", label: "CA", name: "Català" },
@@ -42,6 +44,7 @@ export default function DetalleAudio() {
     setActiveLang(lang);
   };
 
+  // Reproduce el audio; lo genera bajo demanda la primera vez y lo cachea por idioma.
   const handlePlay = async () => {
     if (playing) {
       audioRef.current?.pause();

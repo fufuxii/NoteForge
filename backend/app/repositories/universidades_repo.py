@@ -1,3 +1,4 @@
+# Repositorio de la colección 'universidades' (catálogo de centros, estudios y asignaturas).
 from app.repositories.firestore_client import get_db
 
 COLLECTION = "universidades"

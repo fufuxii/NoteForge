@@ -1,3 +1,4 @@
+// Explorador del catálogo: universidad -> estudios -> asignatura -> apuntes públicos.
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, BookOpen, GraduationCap, Building2 } from "lucide-react";
@@ -31,6 +32,7 @@ export default function Universidades() {
     setApuntes([]);
   };
 
+  // Al elegir asignatura, carga sus apuntes públicos.
   const handleAsignatura = async (asignatura) => {
     setSelectedAsignatura(asignatura);
     setLoadingApuntes(true);

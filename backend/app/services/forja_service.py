@@ -1,22 +1,27 @@
+# Orquestador de la forja: encadena Storage -> OCR/Speech -> Gemini -> guardado.
 from app.repositories import apuntes_repo
 from app.services import storage_service, vision_service, gemini_service, speech_service, translation_service
 
+# Versión síncrona del pipeline (sube fuentes, las transcribe y llama a Gemini).
 def forge(uid: str, asignatura_id, images, audios, texts) -> str:
     sources_meta = []
     sources_text = []
 
+    # Cada imagen se sube y se pasa por OCR.
     for img in images:
         meta = storage_service.upload_file(uid, img, kind="images")
         ocr_text = vision_service.ocr_from_gcs(meta["path"])
         sources_meta.append({"type": "image", "path": meta["path"], "ocr": ocr_text})
         sources_text.append({"kind": "imagen-ocr", "text": ocr_text})
 
+    # Cada audio se sube y se transcribe.
     for aud in audios:
         meta = storage_service.upload_file(uid, aud, kind="audios")
         transcript = speech_service.transcribe_uri(meta["gcsUri"], meta["contentType"])
         sources_meta.append({"type": "audio", "path": meta["path"], "transcript": transcript})
         sources_text.append({"kind": "audio-transcripcion", "text": transcript})
 
+    # Las notas de texto se añaden tal cual.
     for t in texts:
         if t and t.strip():
             sources_meta.append({"type": "text", "text": t})
@@ -29,6 +34,7 @@ def forge(uid: str, asignatura_id, images, audios, texts) -> str:
     })
 
     try:
+        # Llama a Gemini y marca el apunte como listo con el resultado.
         result = gemini_service.forge_note(sources_text)
         apuntes_repo.update(nid, {"title": result.get("title", "Apunte sin título")})
 
@@ -50,6 +56,7 @@ def forge(uid: str, asignatura_id, images, audios, texts) -> str:
 
     return nid
 
+# Versión en segundo plano (la usa el endpoint); recibe los ficheros ya leídos en memoria.
 def forge_async(uid, asignatura_id, images_data, audios_data, texts, nid, context=None):
     from io import BytesIO
     from werkzeug.datastructures import FileStorage

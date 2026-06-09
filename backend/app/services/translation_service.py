@@ -1,3 +1,4 @@
+# Servicio de Cloud Translation: traduce los apuntes y detecta el idioma.
 import copy
 from google.cloud import translate
 from flask import current_app
@@ -10,6 +11,7 @@ def _get_client():
         _client = translate.TranslationServiceClient()
     return _client
 
+# Traduce una tanda de textos en una sola llamada a la API.
 def _batch(texts: list[str], source: str, target: str) -> list[str]:
     if not texts:
         return []
@@ -26,6 +28,7 @@ def _batch(texts: list[str], source: str, target: str) -> list[str]:
     )
     return [t.translated_text for t in response.translations]
 
+# Traduce todos los textos del apunte (título, resumen y bloques).
 def translate_apunte(apunte: dict, target_lang: str) -> dict:
     source = apunte.get("language") or "es"
     if source == target_lang:
@@ -34,6 +37,7 @@ def translate_apunte(apunte: dict, target_lang: str) -> dict:
     out = copy.deepcopy(apunte)
     out["language"] = target_lang
 
+    # Recopila (texto original, función para reescribirlo) y traduce todo de golpe.
     setters = []
 
     def collect(text, set_fn):
@@ -70,6 +74,7 @@ def translate_apunte(apunte: dict, target_lang: str) -> dict:
 
     return out
 
+# Detecta el idioma del texto; cae a 'es' si falla o no es es/ca/en.
 def detect_language(text: str) -> str:
     if not text or not text.strip():
         return "es"

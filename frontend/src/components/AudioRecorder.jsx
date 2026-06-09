@@ -1,3 +1,4 @@
+// Grabador de audio en directo usando la API MediaRecorder del navegador.
 import { useEffect, useRef, useState } from "react";
 import { Mic, Square, Trash2 } from "lucide-react";
 
@@ -13,6 +14,7 @@ export default function AudioRecorder({ onChange }) {
     onChange?.(blob);
   }, [blob]);
 
+  // Pide acceso al micrófono y empieza a grabar en formato webm.
   const start = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -34,6 +36,7 @@ export default function AudioRecorder({ onChange }) {
     }
   };
 
+  // Detiene la grabación y libera el micrófono.
   const stop = () => {
     recorderRef.current?.stop();
     setRecording(false);
@@ -45,6 +48,7 @@ export default function AudioRecorder({ onChange }) {
     setSeconds(0);
   };
 
+  // Formatea los segundos como m:ss.
   const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   if (blob) {

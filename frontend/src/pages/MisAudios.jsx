@@ -1,3 +1,4 @@
+// Biblioteca de audios: apuntes ya forjados que se pueden escuchar.
 import { useEffect, useState } from "react";
 import { AudioLines, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -9,6 +10,7 @@ export default function MisAudios() {
 
   useEffect(() => {
     listApuntes()
+      // Solo los apuntes listos tienen audio disponible.
       .then((r) => setItems((r.items || []).filter((a) => a.status === "ready")))
       .finally(() => setLoading(false));
   }, []);

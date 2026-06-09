@@ -1,3 +1,4 @@
+# Repositorio de la colección 'apuntes': CRUD y consultas sobre Firestore.
 from datetime import datetime, timezone
 from google.cloud import firestore
 from app.repositories.firestore_client import get_db
@@ -7,6 +8,7 @@ COLLECTION = "apuntes"
 def now():
     return datetime.now(timezone.utc)
 
+# Crea un apunte nuevo en estado 'forging' con los campos por defecto.
 def create(uid: str, data: dict) -> str:
     db = get_db()
     doc = {
@@ -35,6 +37,7 @@ def update(nid: str, patch: dict) -> None:
     patch["updatedAt"] = now()
     db.collection(COLLECTION).document(nid).update(patch)
 
+# Marca el apunte como listo guardando estructura, resumen y etiquetas.
 def mark_ready(nid: str, structure: dict, summary: str, tags: list[str]) -> None:
     update(nid, {
         "structure": structure,
@@ -44,6 +47,7 @@ def mark_ready(nid: str, structure: dict, summary: str, tags: list[str]) -> None
         "forgedAt": now(),
     })
 
+# Marca el apunte como erróneo con el mensaje de fallo.
 def mark_error(nid: str, error_msg: str) -> None:
     update(nid, {"status": "error", "error": error_msg})
 
@@ -56,6 +60,7 @@ def get(nid: str) -> dict | None:
     data["id"] = snap.id
     return data
 
+# Apuntes de un usuario, ordenados por fecha de creación descendente.
 def list_by_owner(uid: str, limit: int = 50) -> list[dict]:
     db = get_db()
     q = (db.collection(COLLECTION)
@@ -69,6 +74,7 @@ def list_by_owner(uid: str, limit: int = 50) -> list[dict]:
     out.sort(key=lambda x: x.get("createdAt") or "", reverse=True)
     return out
 
+# Búsqueda por prefijo usando el truco del carácter \uf8ff de Firestore.
 def search_by_title(uid: str, prefix: str, limit: int = 10) -> list[dict]:
     db = get_db()
     end = prefix + "\uf8ff"
@@ -80,6 +86,7 @@ def search_by_title(uid: str, prefix: str, limit: int = 10) -> list[dict]:
            .limit(limit))
     return [{**s.to_dict(), "id": s.id} for s in q.stream()]
 
+# Guarda la ruta del audio TTS ya cacheado, por idioma.
 def save_tts_path(nid: str, lang: str, path: str) -> None:
     update(nid, {f"ttsPaths.{lang}": path})
 
@@ -93,6 +100,7 @@ def set_public(nid: str, public: bool, asignatura: str = None) -> None:
         patch["asignatura"] = asignatura
     update(nid, patch)
 
+# Apuntes públicos de una asignatura (alimenta la sección Universidades).
 def list_public_by_asignatura(asignatura: str) -> list[dict]:
     db = get_db()
     q = (db.collection(COLLECTION)

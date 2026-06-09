@@ -1,3 +1,4 @@
+# Cliente Firestore en singleton perezoso, compartido por todos los repositorios.
 from google.cloud import firestore
 
 _db = None

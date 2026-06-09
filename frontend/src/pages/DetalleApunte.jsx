@@ -1,3 +1,4 @@
+// Detalle del apunte: contenido estructurado + panel de audio, exportación y visibilidad.
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronLeft, Sparkles, FileText, Volume2, Loader2, Play, Globe, Lock, Download } from "lucide-react";
@@ -5,6 +6,7 @@ import { getApunte, fetchTTS, setVisibility, downloadApunte } from "../lib/api";
 import { useToast } from "../components/ui/Toast";
 import PublicarApunteModal from "../components/PublicarApunteModal";
 
+// Formatos de exportación disponibles.
 const FORMATS = [
   { fmt: "pdf", label: "PDF" },
   { fmt: "docx", label: "Word" },
@@ -35,6 +37,7 @@ export default function DetalleApunte() {
     }).catch(() => toast.error("No se pudo cargar el apunte.")).finally(() => setLoading(false));
   }, [id]);
 
+  // Genera y reproduce el audio TTS bajo demanda.
   const handleListen = async () => {
     if (audioUrl) {
       audioRef.current?.play();
@@ -52,6 +55,7 @@ export default function DetalleApunte() {
     }
   };
 
+  // Descarga el apunte en el formato elegido.
   const handleExport = async (fmt, label) => {
     setExporting(fmt);
     try {
@@ -229,6 +233,7 @@ export default function DetalleApunte() {
   );
 }
 
+// Renderiza cada bloque del apunte según su tipo (párrafo, lista, fórmula, cita).
 function Block({ block }) {
   if (block.type === "paragraph") return <p className="leading-relaxed">{block.text}</p>;
   if (block.type === "bullet_list") {

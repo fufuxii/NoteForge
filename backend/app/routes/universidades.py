@@ -1,3 +1,4 @@
+# Rutas públicas del catálogo académico y de los apuntes compartidos por asignatura.
 from flask import Blueprint, jsonify
 from app.repositories import universidades_repo, apuntes_repo
 
@@ -15,6 +16,7 @@ def get_estudios(uid):
     return jsonify(universidad.get("estudios", []))
 
 @universidades_bp.get("/apuntes-publicos")
+# Lista los apuntes marcados como públicos para una asignatura concreta.
 def get_apuntes_publicos():
     from flask import request
     asignatura = request.args.get("asignatura", "").strip()

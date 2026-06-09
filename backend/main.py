@@ -1,3 +1,4 @@
+# Punto de entrada para desarrollo local (en producción lo sirve Gunicorn).
 from app import create_app
 
 app = create_app()

@@ -1,3 +1,5 @@
+# Application factory: crea y configura la app Flask (Firebase Admin, CORS)
+# y registra los blueprints de cada grupo de rutas.
 import os
 from flask import Flask
 from flask_cors import CORS
@@ -8,6 +10,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object("app.config.Config")
 
+    # Inicializa Firebase Admin una sola vez: credenciales de servicio si las hay, si no ADC.
     if not firebase_admin._apps:
         cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
         if cred_path and os.path.exists(cred_path):
@@ -18,12 +21,14 @@ def create_app():
 
     CORS(app, origins=app.config["ALLOWED_ORIGINS"])
 
+    # Import diferido de los blueprints para evitar imports circulares.
     from app.routes.health import health_bp
     from app.routes.forja import forja_bp
     from app.routes.apuntes import apuntes_bp
     from app.routes.users import users_bp
     from app.routes.universidades import universidades_bp
 
+    # Cada blueprint cuelga de su propio prefijo de URL.
     app.register_blueprint(health_bp)
     app.register_blueprint(forja_bp, url_prefix="/forja")
     app.register_blueprint(apuntes_bp, url_prefix="/apuntes")

@@ -1,9 +1,11 @@
+// Inicio: saludo según la hora y los apuntes más recientes.
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowRight, Plus } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { listApuntes } from "../lib/api";
 
+// Devuelve el saludo según la franja horaria.
 function greeting() {
   const h = new Date().getHours();
   if (h < 12) return "Buenos días";
@@ -24,6 +26,7 @@ export default function Home() {
   }, []);
 
   const firstName = (user?.displayName || user?.email || "").split(" ")[0];
+  // Solo los tres apuntes más recientes para el resumen.
   const recientes = apuntes.slice(0, 3);
 
   return (

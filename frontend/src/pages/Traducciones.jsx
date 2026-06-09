@@ -1,3 +1,4 @@
+// Traductor de apuntes: vista previa, edición de título y guardado como apunte nuevo.
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -6,6 +7,7 @@ import {
 } from "lucide-react";
 import { listApuntes, translateApunte, saveTranslation } from "../lib/api";
 
+// Idiomas de destino disponibles.
 const LANGS = [
   { code: "es", label: "Castellano" },
   { code: "ca", label: "Català" },
@@ -16,6 +18,7 @@ function langLabel(code) {
   return LANGS.find((l) => l.code === code)?.label ?? code?.toUpperCase();
 }
 
+// Estado por apunte (idioma destino, fase, resultado, etc.).
 function initItemState() {
   return { target: "", status: "idle", result: null, savedId: null, editTitle: "", saving: false };
 }
@@ -36,6 +39,7 @@ export default function Traducciones() {
     setTs((prev) => ({ ...prev, [id]: { ...(prev[id] || initItemState()), ...data } }));
   }
 
+  // Pide la traducción; avisa si ya existe una a ese idioma.
   async function handleTranslate(apunte) {
     const s = ts[apunte.id] || initItemState();
     if (!s.target || s.target === (apunte.language || "es")) return;
@@ -59,6 +63,7 @@ export default function Traducciones() {
     }
   }
 
+  // Guarda la traducción como apunte independiente y la añade a la lista.
   async function handleSave(apunte) {
     const s = ts[apunte.id] || initItemState();
     if (!s.result) return;
@@ -253,6 +258,7 @@ export default function Traducciones() {
   );
 }
 
+// Muestra a qué idiomas ya se tradujo el apunte.
 function ExistingTranslations({ apuntes, sourceId }) {
   const translations = apuntes.filter((a) => a.sourceApunteId === sourceId);
   if (translations.length === 0) return null;
@@ -272,6 +278,7 @@ function ExistingTranslations({ apuntes, sourceId }) {
   );
 }
 
+// Vista reducida de un bloque para la previsualización.
 function BlockPreview({ block }) {
   if (block.type === "paragraph")
     return <p className="text-sm text-neutral-600 line-clamp-3">{block.text}</p>;

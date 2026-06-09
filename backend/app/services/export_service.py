@@ -1,3 +1,4 @@
+# Servicio de exportación: renderiza el apunte a TXT, DOCX o PDF.
 import io
 import re
 from xml.sax.saxutils import escape
@@ -23,6 +24,7 @@ from docx.shared import Pt, RGBColor, Inches
 FORGE_BLUE = "#2563eb"
 NEUTRAL = "#404040"
 
+# Tipo MIME por formato de exportación.
 MIMETYPES = {
     "txt": "text/plain; charset=utf-8",
     "pdf": "application/pdf",
@@ -38,6 +40,7 @@ def _bullet_text(item) -> str:
     return str(item)
 
 
+# Sanea el título para usarlo como nombre de fichero.
 def safe_filename(title: str, ext: str) -> str:
     base = (title or "apunte").strip()
     base = re.sub(r"[^\w\s\-.áéíóúàèìòùçñÁÉÍÓÚÀÈÌÒÙÇÑ]", "", base, flags=re.UNICODE)
@@ -45,6 +48,7 @@ def safe_filename(title: str, ext: str) -> str:
     return f"{base or 'apunte'}.{ext}"
 
 
+# Despachador: elige el generador según el formato pedido.
 def render(apunte: dict, fmt: str):
     if fmt == "txt":
         return to_txt(apunte), MIMETYPES["txt"], "txt"
@@ -53,6 +57,7 @@ def render(apunte: dict, fmt: str):
     return to_pdf(apunte), MIMETYPES["pdf"], "pdf"
 
 
+# Versión en texto plano del apunte.
 def to_txt(apunte: dict) -> bytes:
     lines = []
     title = apunte.get("title") or "Apunte"
@@ -75,6 +80,7 @@ def to_txt(apunte: dict) -> bytes:
         lines.append(f"{i}. {sec.get('heading', '')}")
         lines.append("")
         for block in sec.get("blocks", []):
+            # Cada tipo de bloque (párrafo, lista, fórmula, cita) se vuelca distinto.
             btype = block.get("type")
             if btype == "paragraph":
                 lines.append(block.get("text", ""))
@@ -96,6 +102,7 @@ def to_txt(apunte: dict) -> bytes:
     return ("\n".join(lines)).encode("utf-8")
 
 
+# Versión Word con estilos básicos (python-docx).
 def to_docx(apunte: dict) -> bytes:
     doc = Document()
 
@@ -153,6 +160,7 @@ def to_docx(apunte: dict) -> bytes:
     return buf.getvalue()
 
 
+# Versión PDF maquetada con ReportLab.
 def to_pdf(apunte: dict) -> bytes:
     buf = io.BytesIO()
     docpdf = SimpleDocTemplate(

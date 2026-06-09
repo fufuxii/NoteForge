@@ -1,3 +1,4 @@
+// Contexto de autenticación: expone el usuario y las acciones login/logout de Google.
 import { createContext, useContext, useEffect, useState } from "react";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
@@ -9,6 +10,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Escucha los cambios de sesión de Firebase y actualiza el estado.
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);

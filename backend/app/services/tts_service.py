@@ -1,7 +1,9 @@
+# Servicio de Text-to-Speech: convierte el apunte en audio narrado.
 from google.cloud import texttospeech
 
 _client = None
 
+# Voz neuronal por idioma soportado.
 VOICES = {
     "es": ("es-ES", "es-ES-Neural2-A"),
     "ca": ("ca-ES", "ca-ES-Standard-A"),
@@ -14,6 +16,7 @@ def _get_client():
         _client = texttospeech.TextToSpeechClient()
     return _client
 
+# Genera el MP3 a partir del texto (con límite de caracteres por petición).
 def synthesize(text: str, lang: str = "es") -> bytes:
     language_code, voice_name = VOICES.get(lang, VOICES["es"])
     synthesis_input = texttospeech.SynthesisInput(text=text[:4500])
@@ -32,6 +35,7 @@ def synthesize(text: str, lang: str = "es") -> bytes:
     )
     return response.audio_content
 
+# Aplana título, resumen y secciones en un texto lineal para narrar.
 def build_narration(apunte: dict) -> str:
     parts = [apunte.get("title", ""), "."]
     if apunte.get("summary"):

@@ -1,3 +1,4 @@
+// Perfil del usuario: selección encadenada de universidad y estudios.
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { getProfile, updateProfile, getUniversidades, getEstudios } from "../lib/api";
@@ -24,12 +25,14 @@ export default function Perfil() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Al cambiar de universidad recarga sus estudios y resetea la selección.
   const handleUniversidad = (nombre) => {
     setForm({ universidad: nombre, estudios: "" });
     const uni = universidades.find((u) => u.nombre === nombre);
     setEstudiosOpciones(uni?.estudios || []);
   };
 
+  // Guarda el perfil y muestra feedback temporal.
   const handleSave = async () => {
     setSaving(true);
     await updateProfile(form);

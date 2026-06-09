@@ -1,3 +1,4 @@
+# Repositorio de la colección 'users': perfil académico del estudiante.
 from app.repositories.firestore_client import get_db
 from datetime import datetime, timezone
 
@@ -10,6 +11,7 @@ def get(uid: str) -> dict | None:
         return None
     return {"uid": uid, **snap.to_dict()}
 
+# Crea o actualiza el perfil; merge=True conserva el resto de campos.
 def upsert(uid: str, data: dict) -> dict:
     db = get_db()
     patch = {

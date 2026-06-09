@@ -1,3 +1,4 @@
+# Servicio de Gemini (vía Vertex AI): fusiona las fuentes en un apunte estructurado en JSON.
 import json
 import os
 from google import genai
@@ -11,10 +12,12 @@ def _get_client():
     if _client is None:
         os.environ["GOOGLE_CLOUD_PROJECT"] = current_app.config["PROJECT_ID"]
         os.environ["GOOGLE_CLOUD_LOCATION"] = current_app.config["REGION"]
+        # Configura el SDK para usar Vertex AI con el proyecto/región de GCP.
         os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
         _client = genai.Client()
     return _client
 
+# Prompt de sistema: define el rol, el JSON de salida y las reglas de la forja.
 FORGE_PROMPT = """Eres NoteForge, un asistente que transforma apuntes brutos de estudiantes en documentos estructurados de estudio.
 
 Recibes uno o más fragmentos de texto extraídos de imágenes (apuntes manuscritos), audios transcritos y notas de texto del usuario. Tu trabajo es fusionarlos en un único apunte coherente.
@@ -48,8 +51,10 @@ Reglas:
 - Las etiquetas deben ser sustantivos cortos (1-2 palabras).
 """
 
+# Construye el prompt con las fuentes (+contexto) y devuelve el JSON parseado.
 def forge_note(sources_text: list[dict], context: dict = None) -> dict:
     client = _get_client()
+    # Concatena cada fuente etiquetada con su origen.
     parts_text = "\n\n".join(
         f"[FUENTE {i+1} · {s['kind']}]\n{s['text']}"
         for i, s in enumerate(sources_text)
@@ -57,6 +62,7 @@ def forge_note(sources_text: list[dict], context: dict = None) -> dict:
     )
 
     context_block = ""
+    # Añade contexto académico (universidad, carrera, asignatura) si se conoce.
     if context:
       parts = []
       if context.get("universidad"):
@@ -70,10 +76,12 @@ def forge_note(sources_text: list[dict], context: dict = None) -> dict:
     
     full_prompt = f"{FORGE_PROMPT}\n\n{context_block}=== FUENTES ===\n{parts_text}\n\n=== JSON ==="
 
+    # Log del prompt para depuración.
     print("\n====== PROMPT ENVIADO A GEMINI ======")
     print(full_prompt)
     print("=====================================\n")
 
+    # Temperatura baja y salida forzada a JSON para una estructura estable.
     response = client.models.generate_content(
         model=current_app.config["GEMINI_MODEL"],
         contents=full_prompt,

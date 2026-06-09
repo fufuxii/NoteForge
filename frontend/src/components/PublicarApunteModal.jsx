@@ -1,3 +1,4 @@
+// Modal para publicar un apunte: deja elegir la asignatura del perfil del usuario.
 import { useEffect, useState } from "react";
 import { X, Globe } from "lucide-react";
 import { getProfile } from "../lib/api";
@@ -9,6 +10,7 @@ export default function PublicarApunteModal({ onConfirm, onClose }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Cruza el perfil con el catálogo para sacar las asignaturas del usuario.
     Promise.all([getProfile(), getAllUniversidades()])
       .then(([profile, unis]) => {
         const uni = unis.find((u) => u.nombre === profile.universidad);

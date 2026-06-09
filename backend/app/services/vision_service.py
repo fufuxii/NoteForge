@@ -1,3 +1,4 @@
+# Servicio de OCR con Cloud Vision: extrae el texto de las imágenes de apuntes.
 from google.cloud import vision
 from app.services.storage_service import download_bytes
 
@@ -9,6 +10,7 @@ def _get_client():
         _client = vision.ImageAnnotatorClient()
     return _client
 
+# Lee la imagen de Storage y devuelve todo el texto detectado.
 def ocr_from_gcs(gcs_path: str) -> str:
     content = download_bytes(gcs_path)
     image = vision.Image(content=content)
