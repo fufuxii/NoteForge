@@ -1,7 +1,9 @@
+// Cliente HTTP de la API: cada función envuelve un endpoint del backend.
 import { auth } from "./firebase";
 
 const BASE = import.meta.env.VITE_API_URL || "/api";
 
+// Adjunta el ID token de Firebase en la cabecera Authorization.
 async function authHeader() {
   const user = auth.currentUser;
   if (!user) return {};
@@ -29,6 +31,7 @@ export async function searchApuntes(q) {
   return res.json();
 }
 
+// Envía las fuentes como multipart/form-data al endpoint de forja.
 export async function forjar({ images = [], audios = [], texts = [], asignaturaId = null }) {
   const fd = new FormData();
   images.forEach((img) => fd.append("images", img));
@@ -48,6 +51,7 @@ export async function forjar({ images = [], audios = [], texts = [], asignaturaI
   return res.json();
 }
 
+// Pide el audio TTS del apunte y lo devuelve como blob.
 export async function fetchTTS(id, lang = "es") {
   const res = await fetch(`${BASE}/apuntes/${id}/tts?lang=${lang}`, {
     headers: { ...(await authHeader()) },
@@ -66,6 +70,7 @@ export async function translateApunte(id, lang) {
 
 const EXPORT_EXT = { pdf: "pdf", docx: "docx", txt: "txt" };
 
+// Descarga el apunte exportado y dispara la descarga en el navegador.
 export async function downloadApunte(id, format, lang = "es", title = "apunte") {
   const res = await fetch(`${BASE}/apuntes/${id}/export?format=${format}&lang=${lang}`, {
     headers: { ...(await authHeader()) },
@@ -73,6 +78,7 @@ export async function downloadApunte(id, format, lang = "es", title = "apunte") 
   if (!res.ok) throw new Error(`export ${res.status}`);
 
   const blob = await res.blob();
+  // Sanea el título para el nombre del fichero descargado.
   const safe = (title || "apunte").replace(/[^\w\sáéíóúàèìòùçñ.\-]/gi, "").trim().replace(/\s+/g, "_") || "apunte";
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -92,6 +98,7 @@ export async function deleteApunte(id) {
   if (!res.ok) throw new Error(`deleteApunte ${res.status}`);
 }
 
+// Cambia la visibilidad pública/privada del apunte.
 export async function setVisibility(id, isPublic, asignatura = null) {
   const res = await fetch(`${BASE}/apuntes/${id}/visibility`, {
     method: "PATCH",
@@ -148,6 +155,7 @@ export async function getApunteStatus(id) {
   return res.json();
 }
 
+// Guarda una traducción como apunte nuevo en el backend.
 export async function saveTranslation(sourceId, lang, title, translatedData) {
   const res = await fetch(`${BASE}/apuntes/${sourceId}/translate`, {
     method: "POST",

@@ -1,3 +1,4 @@
+// Inicialización del SDK de Firebase (Auth con proveedor de Google).
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
