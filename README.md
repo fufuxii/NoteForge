@@ -1,14 +1,8 @@
 # NoteForge
 
-Plataforma web que forja apunts universitaris estructurats a partir d'imatges,
-àudios i text, fent servir IA. Puja les teves fonts i un model les fusiona en un
-apunt coherent que pots llegir, escoltar (TTS), traduir, exportar (PDF/DOCX/TXT) i
-compartir per assignatura.
+Plataforma web que forja apunts estructurats a partir d'imatges, àudios i text, fent servir IA. Aquests apunts es poden llegir, escoltar (TTS), traduir, exportar (PDF/DOCX/TXT) i compartir per assignatura amb altres estudiants.
 
-UAB · Sistemes Multimèdia 2025/2026 — Pablo Gil Gómez, Fiorella Queirolo,
-Meritxell Argente, Alba Rodríguez.
-
----
+UAB · Sistemes Multimèdia 2025/2026 — Pablo Gil Gómez, Fiorella Queirolo,Meritxell Argente, Alba Rodríguez.
 
 ## Arquitectura
 
@@ -21,8 +15,6 @@ Meritxell Argente, Alba Rodríguez.
 > Nota: el projecte no fa servir Google Cloud Functions. El codi del núvol és el
 > servei de backend a Cloud Run (contenidor serverless) més les crides a les APIs
 > gestionades d'IA. Tens el detall a `FUNCIONS_CLOUD.txt`.
-
----
 
 ## Estructura
 
@@ -45,17 +37,13 @@ NoteForge/
     └── deploy-backend.sh   # desplegament del backend a Cloud Run
 ```
 
----
-
-## Requisits previs
+## Requisits
 
 - Python 3.11
 - Node.js 20+ i npm
 - (Per desplegar) gcloud CLI i Firebase CLI, amb accés al projecte GCP `noteforge-sm2026`
 
----
-
-## Configuració de Google Cloud / Firebase
+## Configuració de Google Cloud
 
 1. APIs que han d'estar activades al projecte: Cloud Vision, Speech-to-Text,
    Text-to-Speech, Cloud Translation, Vertex AI, Firestore, Cloud Storage,
@@ -67,9 +55,7 @@ NoteForge/
    `GOOGLE_APPLICATION_CREDENTIALS` (o fes servir `gcloud auth application-default login`).
    A Cloud Run no cal JSON: el servei agafa el seu propi compte de servei.
 
----
-
-## Executar en LOCAL
+# Executar en local
 
 ### 1) Backend (port 8080)
 
@@ -106,8 +92,6 @@ npm run dev
 En desenvolupament, Vite fa de *proxy*: les crides a `/api` van a `http://localhost:8080`
 (mira `vite.config.js`). Així el frontend i el backend parlen entre ells en local.
 
----
-
 ## Desplegament
 
 ### Backend → Cloud Run
@@ -130,15 +114,6 @@ firebase deploy        # publica dist/ a Firebase Hosting
 # → https://noteforge-sm2026.web.app
 ```
 
----
+## Notes
 
-## Nota tècnica
-
-El `requirements.txt` original venia codificat en **UTF-16**, cosa que pot fer petar
-`pip install` en alguns entorns. En aquest paquet ja està convertit a **UTF-8**.
-
----
-
-## Llicència / context
-
-Treball acadèmic de l'assignatura Sistemes Multimèdia (UAB, curs 2025/2026).
+El `requirements.txt` original venia codificat en **UTF-16**, cosa que pot fer "petar" el `pip install` en alguns entorns. En aquest paquet ja està convertit a **UTF-8**.
